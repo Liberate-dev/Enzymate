@@ -9,9 +9,15 @@ import {
   HelpCircle,
   Sparkles,
   Lock,
-  RotateCcw
+  RotateCcw,
+  ArrowRight,
+  ArrowLeft,
+  Volume2,
+  Eye,
+  ShieldCheck
 } from 'lucide-react';
 import { FermentColor, FermentAroma, FermentSurface, FermentGas } from '../types';
+import { MascotBot } from './MascotBot';
 
 interface ObservationScreenProps {
   jarName: string;
@@ -33,6 +39,9 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
   onSubmitObservation,
   onResetTodayStatus
 }) => {
+  // Mode: 'landing' (pengantar edukatif) atau 'form' (formulir input)
+  const [viewMode, setViewMode] = useState<'landing' | 'form'>('landing');
+
   const [selectedColor, setSelectedColor] = useState<FermentColor>('oranye_cokelat');
   const [selectedAroma, setSelectedAroma] = useState<FermentAroma>('asam_segar');
   const [selectedSurface, setSelectedSurface] = useState<FermentSurface>('putih_tipis');
@@ -88,71 +97,137 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
     });
   };
 
-  // Jika sudah observasi hari ini, kunci form sesuai aturan PRD (1x per hari)
-  if (hasObservedToday) {
+  // ================= TAMPILAN 1: LANDING PAGE PENGANTAR OBSERVASI =================
+  if (viewMode === 'landing') {
     return (
-      <div className="flex-1 flex flex-col p-5 bg-[#F8FAF8] justify-center items-center text-center">
-        <div className="w-16 h-16 rounded-3xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 mb-4 shadow-sm">
-          <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-        </div>
-        <h2 className="text-lg font-bold text-stone-800">Misi Observasi Hari Ini Selesai!</h2>
-        <p className="text-xs text-stone-600 mt-2 max-w-xs leading-relaxed">
-          Hebat! Data kondisi toples untuk <strong>Hari ke-{dayNumber}</strong> sudah tercatat.
-        </p>
-
-        <div className="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-left max-w-xs text-xs text-amber-900">
-          <div className="flex items-center gap-1.5 font-bold mb-1 text-amber-800">
-            <Lock className="w-4 h-4 text-amber-600" />
-            <span>Aturan Penting Toples</span>
-          </div>
-          <p className="text-[11px] leading-relaxed">
-            Untuk menjaga agar bakteri baik bekerja maksimal, toples tidak boleh dibuka berkali-kali dalam sehari. Jadwal berikutnya dibuka besok ya!
+      <div className="flex-1 flex flex-col p-4 bg-[#F8FAF8] overflow-y-auto pb-24">
+        {/* Welcome Mascot & Briefing Title */}
+        <div className="enzymate-card p-5 text-center mb-4 relative overflow-hidden bg-gradient-to-b from-white to-emerald-50/40">
+          <MascotBot mood="happy" size="md" className="mx-auto mb-2" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+            Misi Detektif Cilik
+          </span>
+          <h2 className="text-base font-extrabold text-stone-900 mt-2">
+            Pusat Pengamatan & Observasi
+          </h2>
+          <p className="text-xs text-stone-600 mt-1 max-w-xs mx-auto">
+            Pantau kondisi <strong className="text-stone-800">{jarName}</strong> hari ini bersama AI Enzy!
           </p>
         </div>
 
-        {/* Tombol Demo Reset untuk keperluan review pengujian */}
-        <button
-          onClick={onResetTodayStatus}
-          className="mt-6 flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-800 bg-stone-200/60 px-3 py-1.5 rounded-full transition-all"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Uji Coba Observasi Lagi (Mode Demo)</span>
-        </button>
+        {/* 3 Langkah Praktis Observasi Sebelum Isi Form */}
+        <div className="space-y-2.5 mb-4">
+          <h3 className="text-xs font-bold text-stone-800 flex items-center gap-1.5 px-1">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>3 Langkah Pengamatan Bersama Pendamping:</span>
+          </h3>
+
+          <div className="p-3 bg-white rounded-2xl border border-stone-200 shadow-xs flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Volume2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-stone-800">1. Dengarkan Desisan Gas</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Buka tutup toples perlahan. Dengarkan apakah ada bunyi letupan desisan gas mikroba aktif.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 bg-white rounded-2xl border border-stone-200 shadow-xs flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Wind className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-stone-800">2. Cium Aromanya</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Dekatkan hidung tanpa menyentuh cairan. Rasakan apakah beraroma asam segar, manis, atau busuk.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-3 bg-white rounded-2xl border border-stone-200 shadow-xs flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Eye className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-stone-800">3. Amati Warna & Jamur</h4>
+              <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
+                Cek perubahan warna cairan dan pastikan tidak ada jamur berbulu hitam/hijau.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Observasi Hari Ini & Tombol Aksi */}
+        {hasObservedToday ? (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-center mb-4">
+            <div className="flex items-center justify-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Observasi Hari ke-{dayNumber} Sudah Selesai!</span>
+            </div>
+            <p className="text-[11px] text-emerald-700 leading-relaxed mb-3">
+              Toples sudah dicatat hari ini dan ditutup rapat agar bakteri bekerja optimal.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('form')}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-700 text-white font-bold text-xs hover:bg-emerald-800 transition-all"
+              >
+                Lihat / Isi Ulang Form
+              </button>
+              <button
+                onClick={onResetTodayStatus}
+                className="py-2.5 px-3 rounded-xl bg-white border border-stone-200 text-stone-600 hover:text-stone-800 font-bold text-xs flex items-center gap-1 transition-all"
+                title="Reset mode demo"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Demo</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-auto pt-2">
+            <button
+              onClick={() => setViewMode('form')}
+              className="w-full enzymate-btn-primary py-3.5 px-4 flex items-center justify-center gap-2 text-sm shadow-md"
+            >
+              <span>Mulai Isi Kartu Observasi Sekarang</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <p className="text-[10px] text-center text-stone-500 mt-2">
+              Dibatasi 1x per hari demi menjaga kestabilan fermentasi wadah
+            </p>
+          </div>
+        )}
       </div>
     );
   }
 
+  // ================= TAMPILAN 2: FORMULIR INPUT OBSERVASI =================
   return (
     <div className="flex-1 flex flex-col p-4 bg-[#F8FAF8] overflow-y-auto pb-24">
-      {/* Header */}
+      {/* Header dengan Tombol Kembali ke Landing */}
       <div className="mb-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-stone-900 flex items-center gap-1.5">
-              <span>Kartu Observasi Harian</span>
-            </h2>
-            <p className="text-xs text-stone-500">
-              {jarName} • <span className="font-semibold text-emerald-700">Hari ke-{dayNumber}</span>
-            </p>
-          </div>
+          <button
+            onClick={() => setViewMode('landing')}
+            className="flex items-center gap-1 text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 transition-all"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Pengantar</span>
+          </button>
           <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold border border-emerald-300">
-            Misi 1x Sehari
+            Hari ke-{dayNumber}
           </span>
         </div>
 
-        {/* Progress Bar Misi Hari Ini */}
-        <div className="mt-3 bg-white p-3 rounded-2xl border border-stone-200 shadow-xs">
-          <div className="flex justify-between items-center text-xs mb-1.5">
-            <span className="font-semibold text-stone-700 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              Misi Harian: Periksa & Lepas Gas
-            </span>
-            <span className="text-emerald-600 font-bold text-[11px]">Siap Diisi</span>
-          </div>
-          <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-            <div className="bg-emerald-500 h-full w-3/4 rounded-full" />
-          </div>
-        </div>
+        <h2 className="text-base font-extrabold text-stone-900 mt-2">
+          Formulir Pengamatan Visual
+        </h2>
+        <p className="text-xs text-stone-500">
+          Pilih kondisi yang paling sesuai dengan apa yang kamu lihat dan cium.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

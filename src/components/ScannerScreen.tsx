@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, RefreshCw, CheckCircle2, AlertTriangle, XCircle, Sparkles, ShieldCheck, ChevronRight } from 'lucide-react';
+import {
+  Camera,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Sparkles,
+  ShieldCheck,
+  ChevronRight,
+  Scale,
+  Home,
+  Star,
+  Check
+} from 'lucide-react';
 import { SAMPLE_SCAN_PRESETS } from '../ruleEngine';
 import { ScannedMaterial } from '../types';
 
 interface ScannerScreenProps {
   onStartFermentation: (material: ScannedMaterial) => void;
-  onOpenCalculator: () => void;
+  onOpenCalculator: (material?: ScannedMaterial) => void;
 }
 
 export const ScannerScreen: React.FC<ScannerScreenProps> = ({
@@ -16,6 +29,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
   const [isScanning, setIsScanning] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [confirmedMaterial, setConfirmedMaterial] = useState<ScannedMaterial | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Inisialisasi kamera jika diizinkan browser
@@ -53,7 +67,28 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
     setTimeout(() => {
       setSelectedMaterial(material);
       setIsScanning(false);
-    }, 400);
+    }, 350);
+  };
+
+  const handleTriggerConfirmation = (material: ScannedMaterial) => {
+    setConfirmedMaterial(material);
+  };
+
+  const handleGoToCalculator = () => {
+    if (confirmedMaterial) {
+      const mat = confirmedMaterial;
+      setConfirmedMaterial(null);
+      onStartFermentation(mat);
+      onOpenCalculator(mat);
+    }
+  };
+
+  const handleGoToHome = () => {
+    if (confirmedMaterial) {
+      const mat = confirmedMaterial;
+      setConfirmedMaterial(null);
+      onStartFermentation(mat);
+    }
   };
 
   const isMaterialValid = selectedMaterial.isValid;
@@ -74,7 +109,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
         </div>
 
         <button
-          onClick={onOpenCalculator}
+          onClick={() => onOpenCalculator()}
           className="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-md border border-emerald-400/30 transition-all flex items-center gap-1"
         >
           <span>Panduan Takaran</span>
@@ -95,11 +130,11 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-stone-900">
-            <div className="w-28 h-28 rounded-3xl bg-stone-800/80 border border-stone-700 flex items-center justify-center mb-3">
-              <Sparkles className="w-12 h-12 text-emerald-400" />
+            <div className="w-24 h-24 rounded-3xl bg-stone-800/80 border border-stone-700 flex items-center justify-center mb-3">
+              <Sparkles className="w-10 h-10 text-emerald-400" />
             </div>
-            <p className="text-xs text-stone-400 max-w-xs">
-              Simulator Kamera AI: Pilih contoh bahan organik di bawah untuk menguji klasifikasi Edge AI seketika.
+            <p className="text-xs text-stone-300 max-w-xs leading-relaxed">
+              Kamera siap mendeteksi. Gunakan tombol preset di bawah untuk simulasi langsung berbagai jenis bahan organik.
             </p>
           </div>
         )}
@@ -122,7 +157,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           </div>
 
           <div className="text-[11px] text-right text-emerald-300 font-mono">
-            {Math.round(selectedMaterial.confidence * 100)}% Presisi
+            {Math.round(selectedMaterial.confidence * 100)}% Akurasi Edge
           </div>
         </div>
 
@@ -180,8 +215,8 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
             {/* Tombol aksi: Mulai Fermentasi muncul jika valid */}
             {isMaterialValid ? (
               <button
-                onClick={() => onStartFermentation(selectedMaterial)}
-                className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center gap-2 text-sm"
+                onClick={() => handleTriggerConfirmation(selectedMaterial)}
+                className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center gap-2 text-sm shadow-md"
               >
                 <Sparkles className="w-4 h-4 text-emerald-200" />
                 <span>Mulai Fermentasi dengan Bahan Ini</span>
@@ -200,7 +235,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-stone-400 flex items-center gap-1">
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            Uji Sampel Bahan (4 Kelas PRD):
+            Pilih Sampel Uji Bahan (PRD 4.1):
           </span>
         </div>
 
@@ -223,6 +258,52 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           })}
         </div>
       </div>
+
+      {/* MODAL KONFIRMASI IN-APP (Bukan Browser Alert!) */}
+      {confirmedMaterial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white text-stone-900 rounded-3xl p-5 shadow-2xl border border-stone-100 flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-700 flex items-center justify-center mb-3">
+              <Check className="w-7 h-7 text-emerald-600" />
+            </div>
+
+            <h3 className="font-extrabold text-base text-stone-900">
+              Bahan Siap Difermentasi!
+            </h3>
+            <p className="text-xs text-stone-600 mt-1">
+              <strong>{confirmedMaterial.name}</strong> (~{confirmedMaterial.suggestedWeight || 150}g) telah divalidasi oleh AI EnzyMate.
+            </p>
+
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 my-3">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-400" />
+              <span>+30 Bintang Kedisiplinan Diperoleh!</span>
+            </div>
+
+            <p className="text-[11px] text-stone-500 mb-4">
+              Pilih langkah selanjutnya yang ingin kamu lakukan:
+            </p>
+
+            {/* Tombol Terhubung: Menghitung takaran atau kembali ke beranda */}
+            <div className="w-full space-y-2">
+              <button
+                onClick={handleGoToCalculator}
+                className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center gap-2 text-xs shadow-md"
+              >
+                <Scale className="w-4 h-4 text-emerald-200" />
+                <span>Hitung Takaran Air & Gula (Panduan 1:3:10)</span>
+              </button>
+
+              <button
+                onClick={handleGoToHome}
+                className="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Home className="w-4 h-4 text-stone-500" />
+                <span>Simpan & Kembali ke Dashboard Toples</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

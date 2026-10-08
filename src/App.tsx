@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   History,
   CheckCircle2,
-  Info
+  BookOpen,
+  ArrowRight
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -130,6 +131,7 @@ export const App: React.FC = () => {
   const [currentDay, setCurrentDay] = useState<number>(14);
   const [feedbackResult, setFeedbackResult] = useState<EvaluationResult | null>(null);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
+  const [calculatorMaterial, setCalculatorMaterial] = useState<ScannedMaterial | null>(null);
   const [showBadges, setShowBadges] = useState<boolean>(false);
 
   // Sync to LocalStorage
@@ -146,7 +148,6 @@ export const App: React.FC = () => {
   }, [hasObservedToday]);
 
   const handleStartFermentation = (material: ScannedMaterial) => {
-    // Tambah berat organik yang diselamatkan
     const addedWeight = material.suggestedWeight || 150;
     setUser((prev) => ({
       ...prev,
@@ -160,8 +161,16 @@ export const App: React.FC = () => {
       ingredientsDescription: `${prev.ingredientsDescription}, ${material.name}`
     }));
 
-    alert(`Bahan "${material.name}" (${addedWeight}g) berhasil ditambahkan ke rencana toples Anda! +30 Bintang diperoleh.`);
     setActiveTab('home');
+  };
+
+  const handleOpenCalculatorWithMaterial = (material?: ScannedMaterial) => {
+    if (material) {
+      setCalculatorMaterial(material);
+    } else {
+      setCalculatorMaterial(null);
+    }
+    setShowCalculator(true);
   };
 
   const handleSubmitObservation = (data: {
@@ -178,7 +187,6 @@ export const App: React.FC = () => {
       data.gas
     );
 
-    // Update observations
     const newRecord = {
       id: `obs-${Date.now()}`,
       dayNumber: currentDay,
@@ -198,7 +206,6 @@ export const App: React.FC = () => {
       observations: [newRecord, ...prev.observations]
     }));
 
-    // Update user stats
     setUser((prev) => ({
       ...prev,
       totalPoints: prev.totalPoints + evalResult.points,
@@ -219,7 +226,7 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-200 flex items-center justify-center py-0 sm:py-6 selection:bg-emerald-200">
       <div className="mobile-shell">
-        {/* TOP STATUS BAR (Design System: Header hijau dengan Poin & Streak) */}
+        {/* TOP STATUS BAR */}
         <header className="bg-emerald-700 text-white px-4 pt-4 pb-3 flex items-center justify-between shadow-sm sticky top-0 z-30">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-emerald-800 border border-emerald-500/50 flex items-center justify-center font-bold text-xs text-white">
@@ -276,7 +283,7 @@ export const App: React.FC = () => {
                     </h2>
                   </div>
                   <button
-                    onClick={() => setShowCalculator(true)}
+                    onClick={() => handleOpenCalculatorWithMaterial()}
                     className="p-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors"
                     title="Cek Rasio Wadah"
                   >
@@ -305,6 +312,49 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
+              {/* KARTU PANDUAN & KALKULATOR 1:3:10 (FITUR UTAMA - MENCOLOK & INTERAKTIF) */}
+              <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-800 to-teal-900 text-white shadow-lg border border-emerald-600/40 relative overflow-hidden">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>Formula Emas 1 : 3 : 10</span>
+                    </div>
+                    <h3 className="font-extrabold text-base leading-tight">
+                      Panduan & Kalkulator Takaran
+                    </h3>
+                    <p className="text-xs text-emerald-100/90 mt-1 leading-snug">
+                      Cegah toples gagal atau meledak! Cek rasio takaran gula, sisa kulit buah, dan air sesuai ukuran toplesmu.
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20">
+                    <Scale className="w-6 h-6 text-amber-300" />
+                  </div>
+                </div>
+
+                {/* Indikator Pill Formula */}
+                <div className="grid grid-cols-3 gap-1.5 py-2 my-1 text-center text-[10px] font-bold">
+                  <div className="bg-white/15 rounded-xl py-1 px-1 border border-white/10">
+                    <span className="text-amber-300">1</span> Bagian Gula
+                  </div>
+                  <div className="bg-white/15 rounded-xl py-1 px-1 border border-white/10">
+                    <span className="text-emerald-300">3</span> Sisa Buah
+                  </div>
+                  <div className="bg-white/15 rounded-xl py-1 px-1 border border-white/10">
+                    <span className="text-sky-300">10</span> Bagian Air
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleOpenCalculatorWithMaterial()}
+                  className="w-full mt-2 py-3 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs flex items-center justify-center gap-2 shadow-md transition-all active:scale-98"
+                >
+                  <Scale className="w-4 h-4 text-amber-950" />
+                  <span>Buka Kalkulator Toples Sekarang</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+
               {/* KARTU MISI HARI INI */}
               <div className="enzymate-card p-4 border-l-4 border-l-emerald-600">
                 <div className="flex items-center justify-between mb-2">
@@ -331,33 +381,20 @@ export const App: React.FC = () => {
                 <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
                   {hasObservedToday
                     ? 'Pengamatan harian sudah dicatat. Tutup toples tetap rapat agar mikroorganisme bekerja maksimal.'
-                    : 'Waktunya mencatat aroma, warna, dan jamur hari ini. Raih bintang kedisiplinan!'}
+                    : 'Waktunya memeriksa letupan gas, aroma asam segar, dan jamur hari ini bersama AI Enzy!'}
                 </p>
 
                 <button
                   onClick={() => setActiveTab('observation')}
                   className="w-full py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs"
                 >
-                  <span>{hasObservedToday ? 'Lihat Kartu Observasi' : 'Isi Kartu Observasi Sekarang'}</span>
+                  <span>{hasObservedToday ? 'Buka Ruang Observasi' : 'Mulai Pengamatan Hari Ini'}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* SHORTCUT MENU (Kalkulator & Lencana Sekolah) */}
+              {/* SHORTCUT MENU (Lencana Sekolah & Riwayat) */}
               <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  onClick={() => setShowCalculator(true)}
-                  className="p-3 bg-white rounded-2xl border border-stone-200 text-left hover:border-emerald-300 transition-all shadow-xs flex items-center gap-2.5"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Scale className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-stone-800">Panduan 1:3:10</div>
-                    <div className="text-[10px] text-stone-500">Kalkulator Takaran</div>
-                  </div>
-                </button>
-
                 <button
                   onClick={() => setShowBadges(true)}
                   className="p-3 bg-white rounded-2xl border border-stone-200 text-left hover:border-amber-300 transition-all shadow-xs flex items-center gap-2.5"
@@ -368,6 +405,19 @@ export const App: React.FC = () => {
                   <div>
                     <div className="text-xs font-bold text-stone-800">Peringkat & Badge</div>
                     <div className="text-[10px] text-stone-500">Misi SDG Sekolah</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('scanner')}
+                  className="p-3 bg-white rounded-2xl border border-stone-200 text-left hover:border-emerald-300 transition-all shadow-xs flex items-center gap-2.5"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-800">Scan Bahan Baru</div>
+                    <div className="text-[10px] text-stone-500">Edge AI Offline</div>
                   </div>
                 </button>
               </div>
@@ -410,7 +460,7 @@ export const App: React.FC = () => {
           {activeTab === 'scanner' && (
             <ScannerScreen
               onStartFermentation={handleStartFermentation}
-              onOpenCalculator={() => setShowCalculator(true)}
+              onOpenCalculator={handleOpenCalculatorWithMaterial}
             />
           )}
 
@@ -477,7 +527,15 @@ export const App: React.FC = () => {
         )}
 
         {/* MODAL KALKULATOR 1:3:10 */}
-        {showCalculator && <CalculatorModal onClose={() => setShowCalculator(false)} />}
+        {showCalculator && (
+          <CalculatorModal
+            initialMaterial={calculatorMaterial}
+            onClose={() => {
+              setShowCalculator(false);
+              setCalculatorMaterial(null);
+            }}
+          />
+        )}
 
         {/* MODAL BADGES & PRESTASI SEKOLAH */}
         {showBadges && (
