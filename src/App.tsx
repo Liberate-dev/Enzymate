@@ -373,16 +373,22 @@ export const App: React.FC = () => {
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => setShowBadges(true)}
-                  className="p-3 bg-white rounded-xl border border-stone-200 text-left hover:border-stone-300 transition-colors shadow-xs"
+                  className="p-3 bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-xl border border-amber-200/90 text-left hover:border-amber-300 transition-all shadow-xs"
                 >
-                  <div className="text-xs font-bold text-stone-800">Peringkat & Lencana</div>
-                  <div className="text-[10px] text-stone-500 mt-0.5">Klasemen sekolah</div>
+                  <span className="text-[9px] uppercase font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded inline-block mb-1">
+                    Klasemen Siswa
+                  </span>
+                  <div className="text-xs font-bold text-amber-950">Peringkat & Lencana</div>
+                  <div className="text-[10px] text-amber-800/80 mt-0.5">Misi SDG sekolah</div>
                 </button>
 
                 <button
                   onClick={() => setActiveTab('scanner')}
                   className="p-3 bg-white rounded-xl border border-stone-200 text-left hover:border-stone-300 transition-colors shadow-xs"
                 >
+                  <span className="text-[9px] uppercase font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded inline-block mb-1">
+                    Edge AI
+                  </span>
                   <div className="text-xs font-bold text-stone-800">Scan Bahan Baru</div>
                   <div className="text-[10px] text-stone-500 mt-0.5">Pemindai lokal offline</div>
                 </button>
@@ -440,35 +446,48 @@ export const App: React.FC = () => {
           )}
         </main>
 
-        {/* BOTTOM NAVIGATION BAR (BERSIH & TERSTRUKTUR SEPERTI APP NATIVE) */}
-        <nav className="bg-white border-t border-stone-200 px-6 py-2.5 flex items-center justify-around sticky bottom-0 z-30">
+        {/* BOTTOM NAVIGATION BAR */}
+        <nav className="bg-white border-t border-stone-200 px-6 py-2 flex items-center justify-between sticky bottom-0 z-30 shadow-md">
           <button
             onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
+            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors w-16 ${
               activeTab === 'home' ? 'text-emerald-800' : 'text-stone-400 hover:text-stone-600'
             }`}
           >
-            <Home className="w-4 h-4" />
+            <Home className="w-5 h-5" />
             <span>Beranda</span>
           </button>
 
+          {/* Tombol Menonjol & Timbul untuk Scan AI */}
           <button
             onClick={() => setActiveTab('scanner')}
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-              activeTab === 'scanner' ? 'text-emerald-800' : 'text-stone-400 hover:text-stone-600'
-            }`}
+            className="flex flex-col items-center -mt-5 transition-transform active:scale-95"
           >
-            <Camera className="w-4 h-4" />
-            <span>Scan AI</span>
+            <div
+              className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-[3px] border-white transition-all ${
+                activeTab === 'scanner'
+                  ? 'bg-emerald-700 text-white ring-2 ring-emerald-600/40'
+                  : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-100 ring-2 ring-emerald-800/20'
+              }`}
+            >
+              <Camera className="w-5 h-5" />
+            </div>
+            <span
+              className={`text-[10px] font-bold mt-1 ${
+                activeTab === 'scanner' ? 'text-emerald-800' : 'text-stone-500'
+              }`}
+            >
+              Scan AI
+            </span>
           </button>
 
           <button
             onClick={() => setActiveTab('observation')}
-            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
+            className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors w-16 ${
               activeTab === 'observation' ? 'text-emerald-800' : 'text-stone-400 hover:text-stone-600'
             }`}
           >
-            <ClipboardList className="w-4 h-4" />
+            <ClipboardList className="w-5 h-5" />
             <span>Observasi</span>
           </button>
         </nav>
