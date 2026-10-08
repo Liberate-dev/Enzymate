@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Sparkles,
   ShieldCheck,
   ChevronRight,
   Scale,
@@ -131,7 +130,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-stone-900">
             <div className="w-24 h-24 rounded-3xl bg-stone-800/80 border border-stone-700 flex items-center justify-center mb-3">
-              <Sparkles className="w-10 h-10 text-emerald-400" />
+              <Camera className="w-10 h-10 text-emerald-400" />
             </div>
             <p className="text-xs text-stone-300 max-w-xs leading-relaxed">
               Kamera siap mendeteksi. Gunakan tombol preset di bawah untuk simulasi langsung berbagai jenis bahan organik.
@@ -218,7 +217,6 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                 onClick={() => handleTriggerConfirmation(selectedMaterial)}
                 className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center gap-2 text-sm shadow-md"
               >
-                <Sparkles className="w-4 h-4 text-emerald-200" />
                 <span>Mulai Fermentasi dengan Bahan Ini</span>
               </button>
             ) : (
