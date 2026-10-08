@@ -317,7 +317,6 @@ export const App: React.FC = () => {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div>
                     <div className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1">
-                      <Sparkles className="w-3 h-3" />
                       <span>Formula Emas 1 : 3 : 10</span>
                     </div>
                     <h3 className="font-extrabold text-base leading-tight">

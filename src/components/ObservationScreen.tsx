@@ -105,7 +105,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         <div className="enzymate-card p-5 text-center mb-4 relative overflow-hidden bg-gradient-to-b from-white to-emerald-50/40">
           <MascotBot mood="happy" size="md" className="mx-auto mb-2" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
-            Misi Detektif Cilik
+            Jadwal Observasi Harian
           </span>
           <h2 className="text-base font-extrabold text-stone-900 mt-2">
             Pusat Pengamatan & Observasi
@@ -117,8 +117,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
 
         {/* 3 Langkah Praktis Observasi Sebelum Isi Form */}
         <div className="space-y-2.5 mb-4">
-          <h3 className="text-xs font-bold text-stone-800 flex items-center gap-1.5 px-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <h3 className="text-xs font-bold text-stone-800 px-1">
             <span>3 Langkah Pengamatan Bersama Pendamping:</span>
           </h3>
 

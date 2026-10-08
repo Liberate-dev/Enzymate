@@ -38,8 +38,7 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
 
         {/* Jika terhubung dari hasil scan AI */}
         {initialMaterial && (
-          <div className="mb-3 p-2.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="mb-3 p-2.5 rounded-2xl bg-emerald-50 border border-emerald-300">
             <div className="text-[11px] text-emerald-900 leading-snug">
               Bahan dari Scan AI: <strong>{initialMaterial.name}</strong> (~{initialMaterial.suggestedWeight || 150}g).
             </div>
