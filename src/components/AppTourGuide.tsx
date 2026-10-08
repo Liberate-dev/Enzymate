@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react';
 
 export interface TourStep {
   targetId: string;
   title: string;
   description: string;
-  placement: 'top' | 'bottom' | 'center';
+  preferredPlacement?: 'top' | 'bottom';
 }
 
 const TOUR_STEPS: TourStep[] = [
@@ -13,31 +13,31 @@ const TOUR_STEPS: TourStep[] = [
     targetId: 'tour-jar-card',
     title: 'Toples Fermentasi Aktif',
     description: 'Lihat perkembangan toplesmu, umur hari fermentasi, dan pastikan cairan tidak melebihi batas aman 2/3 kapasitas wadah.',
-    placement: 'bottom'
+    preferredPlacement: 'bottom'
   },
   {
     targetId: 'tour-calculator-card',
     title: 'Kalkulator Takaran 1 : 3 : 10',
     description: 'Gunakan kalkulator ini untuk menghitung takaran presisi gula merah, sisa kulit buah, dan air sesuai volume toplesmu.',
-    placement: 'bottom'
+    preferredPlacement: 'bottom'
   },
   {
     targetId: 'tour-mission-card',
     title: 'Misi & Observasi Harian',
     description: 'Setiap hari, buka toples perlahan untuk merilis gas, lalu catat warna, aroma, dan jamur di kartu observasi harian.',
-    placement: 'top'
+    preferredPlacement: 'top'
   },
   {
     targetId: 'tour-scanner-button',
     title: 'AI Camera Scanner',
     description: 'Pindai sisa kulit buah atau sayur segar menggunakan kamera Edge AI offline untuk memastikan bahan layak sebelum difermentasi.',
-    placement: 'top'
+    preferredPlacement: 'top'
   },
   {
     targetId: 'tour-header-stats',
     title: 'Streak & Poin Kedisiplinan',
     description: 'Pertahankan streak harian dan raih poin untuk membuka lencana serta membawa kelasmu memimpin klasemen sekolah!',
-    placement: 'bottom'
+    preferredPlacement: 'bottom'
   }
 ];
 
@@ -58,30 +58,68 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  // Update target bounding box ketika step berganti atau window di-resize
+  // Fungsi sinkronisasi koordinat posisi elemen target
+  const syncRect = useCallback(() => {
+    if (!isOpen) return;
+    const step = TOUR_STEPS[currentStepIndex];
+    const el = document.getElementById(step.targetId);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setTargetRect(rect);
+    }
+  }, [isOpen, currentStepIndex]);
+
+  // Handle scroll & penyesuaian saat step berganti
   useEffect(() => {
     if (!isOpen) return;
 
-    const updateRect = () => {
-      const step = TOUR_STEPS[currentStepIndex];
-      const el = document.getElementById(step.targetId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Beri sedikit jeda scroll agar posisi rect akurat
-        setTimeout(() => {
-          const rect = el.getBoundingClientRect();
-          setTargetRect(rect);
-        }, 150);
+    const step = TOUR_STEPS[currentStepIndex];
+    const el = document.getElementById(step.targetId);
+
+    if (el) {
+      if (step.targetId === 'tour-header-stats') {
+        // Untuk header stats di langkah 5, scroll container ke paling atas seketika
+        const scrollContainer = document.getElementById('main-scroll-container');
+        if (scrollContainer) {
+          scrollContainer.scrollTo({ top: 0, behavior: 'auto' });
+        }
+        window.scrollTo({ top: 0, behavior: 'auto' });
       } else {
-        setTargetRect(null);
+        // Scroll instan ke elemen agar tidak terjadi delay animasi getBoundingClientRect
+        el.scrollIntoView({ behavior: 'auto', block: 'nearest' });
       }
+    }
+
+    // Ambil koordinat awal
+    syncRect();
+
+    // Pastikan posisi ter-update setelah frame berikutnya
+    rafRef.current = requestAnimationFrame(() => {
+      syncRect();
+    });
+
+    const scrollContainer = document.getElementById('main-scroll-container');
+    const handleScroll = () => {
+      syncRect();
     };
 
-    updateRect();
-    window.addEventListener('resize', updateRect);
-    return () => window.removeEventListener('resize', updateRect);
-  }, [isOpen, currentStepIndex]);
+    window.addEventListener('resize', handleScroll);
+    window.addEventListener('scroll', handleScroll, true);
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('scroll', handleScroll, true);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [isOpen, currentStepIndex, syncRect]);
 
   const handleNext = () => {
     if (currentStepIndex < TOUR_STEPS.length - 1) {
@@ -131,7 +169,7 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
               onClick={onDismissPrompt}
               className="w-full py-2 px-4 rounded-xl text-stone-500 hover:text-stone-800 font-semibold text-xs transition-colors"
             >
-              Nanti Saja (Bisa Dibuka Kapan Saja)
+              Nanti Saja
             </button>
           </div>
         </div>
@@ -139,7 +177,7 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
     );
   }
 
-  // ================= 2. SPOTLIGHT & BOKEH OVERLAY TOUR =================
+  // ================= 2. SPOTLIGHT DENGAN HOLE-CUTOUT (TIDAK BLUR DI AREA TARGET) =================
   if (!isOpen) return null;
 
   const currentStep = TOUR_STEPS[currentStepIndex];
@@ -147,33 +185,71 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
   const isLast = currentStepIndex === TOUR_STEPS.length - 1;
 
   // Hitung posisi kotak sorot dengan margin aman
-  const padding = 6;
-  const spotlightStyle: React.CSSProperties = targetRect
-    ? {
-        position: 'fixed',
-        top: Math.max(8, targetRect.top - padding),
-        left: Math.max(8, targetRect.left - padding),
-        width: targetRect.width + padding * 2,
-        height: targetRect.height + padding * 2,
-        borderRadius: '16px',
-        boxShadow: '0 0 0 9999px rgba(12, 16, 20, 0.72)',
-        border: '2px solid rgba(52, 211, 153, 0.9)',
-        zIndex: 51,
-        pointerEvents: 'none',
-        transition: 'all 0.25s ease-out'
-      }
-    : {};
+  const pad = 6;
+  const spotlightX = targetRect ? Math.max(4, targetRect.left - pad) : 0;
+  const spotlightY = targetRect ? Math.max(4, targetRect.top - pad) : 0;
+  const spotlightW = targetRect ? targetRect.width + pad * 2 : 0;
+  const spotlightH = targetRect ? targetRect.height + pad * 2 : 0;
+
+  // Logika posisi tooltip dinamis: jika target di bagian bawah layar (misal tombol Scan),
+  // tempatkan tooltip di bagian ATAS agar tidak menutupi tombol!
+  const isTargetAtBottom = targetRect ? targetRect.top > window.innerHeight * 0.45 : false;
 
   return (
     <div className="fixed inset-0 z-50 pointer-events-auto overflow-hidden animate-in fade-in duration-200">
-      {/* Efek Bokeh Latar Belakang */}
-      <div className="fixed inset-0 backdrop-blur-[2px] pointer-events-none" />
+      {/* SVG MASK UNTUK MENG-CUTOUT BLUR & WARNA GELAP DI AREA HIGHLIGHT */}
+      {targetRect && (
+        <svg className="fixed inset-0 w-0 h-0 pointer-events-none" aria-hidden="true">
+          <defs>
+            <mask id="spotlight-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+              {/* Bagian putih: dilapisi gelap & blur */}
+              <rect width="100vw" height="100vh" fill="white" />
+              {/* Bagian hitam (cutout): 100% tembus pandang, TANPA BLUR, TANPA GELAP */}
+              <rect
+                x={spotlightX}
+                y={spotlightY}
+                width={spotlightW}
+                height={spotlightH}
+                rx={16}
+                ry={16}
+                fill="black"
+              />
+            </mask>
+          </defs>
+        </svg>
+      )}
 
-      {/* Kotak Sorotan Lampu (Spotlight Cutout) */}
-      {targetRect && <div style={spotlightStyle} />}
+      {/* OVERLAY GELAP & BOKEH DENGAN CUTOUT MASK (BAGIAN HIGHLIGHT TIDAK KENA BLUR) */}
+      <div
+        className="fixed inset-0 pointer-events-none z-50 transition-all duration-200"
+        style={{
+          backgroundColor: 'rgba(12, 16, 20, 0.72)',
+          backdropFilter: 'blur(3px)',
+          WebkitBackdropFilter: 'blur(3px)',
+          mask: targetRect ? 'url(#spotlight-mask)' : 'none',
+          WebkitMask: targetRect ? 'url(#spotlight-mask)' : 'none'
+        }}
+      />
 
-      {/* Dialog Panduan & Penunjuk Panah */}
-      <div className="fixed inset-x-4 z-52 flex justify-center bottom-6 sm:bottom-10 pointer-events-auto">
+      {/* BINGKAI HIGHLIGHT HIJAU MENYALA DI SEKELILING ELEMEN TARGET */}
+      {targetRect && (
+        <div
+          className="fixed pointer-events-none z-51 rounded-2xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.6)] transition-all duration-200"
+          style={{
+            top: spotlightY,
+            left: spotlightX,
+            width: spotlightW,
+            height: spotlightH
+          }}
+        />
+      )}
+
+      {/* KOTAK KETERANGAN FLEKSIBEL (MUNCUL DI ATAS ATAU DI BAWAH SESUAI POSISI TARGET) */}
+      <div
+        className={`fixed inset-x-4 z-52 flex justify-center pointer-events-auto transition-all duration-200 ${
+          isTargetAtBottom ? 'top-6 sm:top-8' : 'bottom-6 sm:bottom-8'
+        }`}
+      >
         <div className="w-full max-w-sm bg-white rounded-2xl p-4 shadow-2xl border border-stone-100 flex flex-col text-stone-900 animate-in slide-in-from-bottom-2 duration-200">
           {/* Header Dialog */}
           <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-stone-100">
@@ -189,12 +265,12 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
             </button>
           </div>
 
-          {/* Indikator Panah Penunjuk */}
-          <div className="flex items-center gap-1.5 text-emerald-700 text-xs font-bold mb-1">
-            {currentStep.placement === 'bottom' ? (
-              <ArrowUp className="w-4 h-4 text-emerald-600 animate-bounce" />
+          {/* Indikator Panah Penunjuk Sesuai Posisi Elemen Target */}
+          <div className="flex items-center gap-1.5 text-emerald-800 text-xs font-bold mb-1">
+            {isTargetAtBottom ? (
+              <ArrowDown className="w-4 h-4 text-emerald-600 animate-bounce shrink-0" />
             ) : (
-              <ArrowDown className="w-4 h-4 text-emerald-600 animate-bounce" />
+              <ArrowUp className="w-4 h-4 text-emerald-600 animate-bounce shrink-0" />
             )}
             <span>{currentStep.title}</span>
           </div>

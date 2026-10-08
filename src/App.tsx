@@ -297,7 +297,7 @@ export const App: React.FC = () => {
         {/* MAIN BODY AREA */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
           {activeTab === 'home' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 pb-24">
+            <div id="main-scroll-container" className="flex-1 overflow-y-auto p-4 space-y-3.5 pb-24">
               {/* KARTU TOPLES AKTIF (Target Spotlight Step 1) */}
               <div id="tour-jar-card" className="enzymate-card p-4 relative">
                 <div className="flex justify-between items-start mb-2">
