@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Enzyme** (159 symbols, 201 relationships, 4 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Enzymate** (161 symbols, 202 relationships, 4 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -24,10 +24,10 @@ This project is indexed by GitNexus as **Enzyme** (159 symbols, 201 relationship
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/Enzyme/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Enzyme/clusters` | All functional areas |
-| `gitnexus://repo/Enzyme/processes` | All execution flows |
-| `gitnexus://repo/Enzyme/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/Enzymate/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/Enzymate/clusters` | All functional areas |
+| `gitnexus://repo/Enzymate/processes` | All execution flows |
+| `gitnexus://repo/Enzymate/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

@@ -18,6 +18,7 @@ Aplikasi terbagi menjadi **3 Layar Utama**, **1 Sub-Layar Alur**, dan **4 Modal 
 | **M2**| **Modal Umpan Balik AI & Safety** | Modal Evaluasi | [`FeedbackModal.tsx`](file:///D:/Porto/Enzyme/src/components/FeedbackModal.tsx) & [`MascotBot.tsx`](file:///D:/Porto/Enzyme/src/components/MascotBot.tsx) |
 | **M3**| **Modal Kalkulator Rasio 1:3:10**| Modal Panduan | [`CalculatorModal.tsx`](file:///D:/Porto/Enzyme/src/components/CalculatorModal.tsx) |
 | **M4**| **Modal Prestasi & Leaderboard** | Modal Gamifikasi | [`BadgesModal.tsx`](file:///D:/Porto/Enzyme/src/components/BadgesModal.tsx) |
+| **M5**| **Modal Tur Panduan & Spotlight**| Modal Interaktif | [`AppTourGuide.tsx`](file:///D:/Porto/Enzyme/src/components/AppTourGuide.tsx) |
 
 ---
 
@@ -185,6 +186,17 @@ flowchart TD
 * Pelacak dampak lingkungan: Total gram sampah organik yang diselamatkan dari tempat sampah (SDG 12 & 13).
 * Lencana penghargaan anak: *Detektif Dini*, *Rentetan Disiplin*, *Ahli Eco-Enzyme*, dan *Pahlawan Pangan*.
 * Papan peringkat antar-kelas sekolah dasar untuk memupuk semangat kolaborasi.
+
+#### M5. Tur Panduan & Spotlight Bokeh ([AppTourGuide.tsx](file:///D:/Porto/Enzyme/src/components/AppTourGuide.tsx))
+* **Penawaran Pertama Kali:** Saat pertama kali aplikasi dibuka, sistem otomatis menanyakan: *"Selamat Datang di EnzyMate! Ingin mengikuti panduan tur singkat?"*.
+* **Efek Bokeh & Spotlight:** Layar diberi latar belakang gelap kabur (*blur overlay*) dan menyorot elemen UI aktif dengan kotak lampu sorot (*cutout spotlight box*).
+* **5 Langkah Pengenalan:**
+  1. *Toples Fermentasi Aktif* (umur hari, batas 2/3 aman).
+  2. *Kalkulator Takaran 1:3:10* (aturan rasio gula, sisa buah, air).
+  3. *Misi Observasi Harian* (rilis gas & formulir catatan).
+  4. *AI Camera Scanner* (tombol bulat melayang di navbar bawah).
+  5. *Streak & Poin Kedisiplinan* (penghitung prestasi di bar atas).
+* **Akses Fleksibel:** Tur dapat dibuka kapan saja melalui ikon tombol bantuan (`?`) di pojok kanan atas layar.
 
 ---
 

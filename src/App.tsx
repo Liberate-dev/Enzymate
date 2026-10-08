@@ -6,7 +6,8 @@ import {
   ClipboardList,
   Home,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  HelpCircle
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -14,6 +15,7 @@ import { ObservationScreen } from './components/ObservationScreen';
 import { FeedbackModal } from './components/FeedbackModal';
 import { CalculatorModal } from './components/CalculatorModal';
 import { BadgesModal } from './components/BadgesModal';
+import { AppTourGuide } from './components/AppTourGuide';
 import {
   JarData,
   UserProgress,
@@ -125,6 +127,10 @@ export const App: React.FC = () => {
   const [calculatorMaterial, setCalculatorMaterial] = useState<ScannedMaterial | null>(null);
   const [showBadges, setShowBadges] = useState<boolean>(false);
 
+  // Tour Guide State
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
+  const [showTourPrompt, setShowTourPrompt] = useState<boolean>(false);
+
   // Sync to LocalStorage
   useEffect(() => {
     localStorage.setItem('enzymate_jar', JSON.stringify(jar));
@@ -137,6 +143,14 @@ export const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('enzymate_observed_today', hasObservedToday ? 'true' : 'false');
   }, [hasObservedToday]);
+
+  // Cek apakah baru pertama kali dibuka untuk menampilkan penawaran tur
+  useEffect(() => {
+    const tourPrompted = localStorage.getItem('enzymate_tour_prompted');
+    if (!tourPrompted) {
+      setShowTourPrompt(true);
+    }
+  }, []);
 
   const handleStartFermentation = (material: ScannedMaterial) => {
     const addedWeight = material.suggestedWeight || 150;
@@ -211,6 +225,18 @@ export const App: React.FC = () => {
     setHasObservedToday(false);
   };
 
+  const handleStartTour = () => {
+    setShowTourPrompt(false);
+    localStorage.setItem('enzymate_tour_prompted', 'true');
+    setActiveTab('home');
+    setIsTourOpen(true);
+  };
+
+  const handleDismissTourPrompt = () => {
+    setShowTourPrompt(false);
+    localStorage.setItem('enzymate_tour_prompted', 'true');
+  };
+
   const latestObservation = jar.observations[0];
   const currentStatus = latestObservation ? latestObservation.status : 'normal';
 
@@ -233,23 +259,38 @@ export const App: React.FC = () => {
             </p>
           </div>
 
-          {/* Gamifikasi Badges: Streak & Poin */}
-          <div className="flex items-center gap-2">
+          {/* Gamifikasi Badges & Ikon Bantuan Tur */}
+          <div className="flex items-center gap-1.5">
+            {/* Tombol Akses Tutorial Tour Kapan Saja */}
             <button
-              onClick={() => setShowBadges(true)}
-              className="flex items-center gap-1 bg-emerald-900/60 hover:bg-emerald-900 text-amber-300 px-2.5 py-1 rounded-lg text-xs font-semibold border border-emerald-700/60 transition-colors"
+              onClick={() => {
+                setActiveTab('home');
+                setIsTourOpen(true);
+              }}
+              className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-700/60 transition-colors"
+              title="Buka Panduan Tur Aplikasi"
             >
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>{user.streakDays} Hari</span>
+              <HelpCircle className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={() => setShowBadges(true)}
-              className="flex items-center gap-1 bg-emerald-900/60 hover:bg-emerald-900 text-amber-300 px-2.5 py-1 rounded-lg text-xs font-semibold border border-emerald-700/60 transition-colors"
-            >
-              <Star className="w-3.5 h-3.5 text-amber-400" />
-              <span>{user.totalPoints}</span>
-            </button>
+            {/* Streak & Poin (Target Spotlight Header) */}
+            <div id="tour-header-stats" className="flex items-center gap-1.5">
+              <button
+                onClick={() => setShowBadges(true)}
+                className="flex items-center gap-1 bg-emerald-900/60 hover:bg-emerald-900 text-amber-300 px-2 py-1 rounded-lg text-xs font-semibold border border-emerald-700/60 transition-colors"
+              >
+                <Flame className="w-3.5 h-3.5 text-amber-400" />
+                <span>{user.streakDays}</span>
+              </button>
+
+              <button
+                onClick={() => setShowBadges(true)}
+                className="flex items-center gap-1 bg-emerald-900/60 hover:bg-emerald-900 text-amber-300 px-2 py-1 rounded-lg text-xs font-semibold border border-emerald-700/60 transition-colors"
+              >
+                <Star className="w-3.5 h-3.5 text-amber-400" />
+                <span>{user.totalPoints}</span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -257,8 +298,8 @@ export const App: React.FC = () => {
         <main className="flex-1 flex flex-col overflow-hidden relative">
           {activeTab === 'home' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-3.5 pb-24">
-              {/* KARTU TOPLES AKTIF */}
-              <div className="enzymate-card p-4 relative">
+              {/* KARTU TOPLES AKTIF (Target Spotlight Step 1) */}
+              <div id="tour-jar-card" className="enzymate-card p-4 relative">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -294,8 +335,8 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* BANNER PANDUAN & KALKULATOR 1:3:10 (BERSIH & PROFESIONAL) */}
-              <div className="p-4 rounded-2xl bg-stone-900 text-white border border-stone-800">
+              {/* BANNER PANDUAN & KALKULATOR 1:3:10 (Target Spotlight Step 2) */}
+              <div id="tour-calculator-card" className="p-4 rounded-2xl bg-stone-900 text-white border border-stone-800">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
                     Formula 1 : 3 : 10
@@ -332,8 +373,8 @@ export const App: React.FC = () => {
                 </button>
               </div>
 
-              {/* KARTU MISI HARI INI */}
-              <div className="enzymate-card p-4 border-l-4 border-l-emerald-700">
+              {/* KARTU MISI HARI INI (Target Spotlight Step 3) */}
+              <div id="tour-mission-card" className="enzymate-card p-4 border-l-4 border-l-emerald-700">
                 <div className="flex items-center justify-between mb-1.5">
                   <div>
                     <h3 className="font-bold text-xs text-stone-900">
@@ -458,8 +499,9 @@ export const App: React.FC = () => {
             <span>Beranda</span>
           </button>
 
-          {/* Tombol Menonjol & Timbul untuk Scan AI */}
+          {/* Tombol Menonjol untuk Scan AI (Target Spotlight Step 4) */}
           <button
+            id="tour-scanner-button"
             onClick={() => setActiveTab('scanner')}
             className="flex flex-col items-center -mt-5 transition-transform active:scale-95"
           >
@@ -491,6 +533,15 @@ export const App: React.FC = () => {
             <span>Observasi</span>
           </button>
         </nav>
+
+        {/* MODAL TOUR GUIDE & SPOTLIGHT BOKEH */}
+        <AppTourGuide
+          isOpen={isTourOpen}
+          onClose={() => setIsTourOpen(false)}
+          onStartTour={handleStartTour}
+          showInitialPrompt={showTourPrompt}
+          onDismissPrompt={handleDismissTourPrompt}
+        />
 
         {/* MODAL FEEDBACK RULE ENGINE */}
         {feedbackResult && (
