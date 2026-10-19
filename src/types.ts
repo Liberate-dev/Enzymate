@@ -44,6 +44,9 @@ export interface JarData {
   waterVolumeMl: number;
   ingredientsDescription: string;
   observations: ObservationRecord[];
+  isCompleted?: boolean;
+  harvestDate?: string;
+  harvestYieldMl?: number;
 }
 
 export interface UserProgress {

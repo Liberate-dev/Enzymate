@@ -138,7 +138,7 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
             🌱
           </div>
           <h3 className="font-extrabold text-base text-stone-900">
-            Selamat Datang di EnzyMate!
+            Selamat Datang di Enzymo!
           </h3>
           <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">
             Ingin mengikuti panduan tur singkat untuk mengenal fitur-fitur penting pembuatan eco-enzyme?

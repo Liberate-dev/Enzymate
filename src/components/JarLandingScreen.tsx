@@ -1,0 +1,325 @@
+import React, { useState } from 'react';
+import {
+  Plus,
+  Sparkles,
+  Calendar,
+  CheckCircle2,
+  ArrowRight,
+  Archive,
+  Droplets,
+  Scale,
+  Clock,
+  Trash2,
+  Layers
+} from 'lucide-react';
+import { JarData } from '../types';
+
+interface JarLandingScreenProps {
+  jars: JarData[];
+  onOpenJar: (jarId: string) => void;
+  onOpenCreateJar: () => void;
+  onDeleteJar: (jarId: string) => void;
+}
+
+export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
+  jars,
+  onOpenJar,
+  onOpenCreateJar,
+  onDeleteJar
+}) => {
+  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'completed'>('all');
+
+  const activeJars = jars.filter((j) => !j.isCompleted);
+  const completedJars = jars.filter((j) => j.isCompleted);
+
+  const displayedJars =
+    filterTab === 'active'
+      ? activeJars
+      : filterTab === 'completed'
+      ? completedJars
+      : jars;
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 text-stone-800">
+      {/* 1. HERO BANNER: TAMBAH TOPLES BARU */}
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-800 to-emerald-900 text-white shadow-md relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-[radial-gradient(circle_at_center,_rgba(52,211,153,0.25)_0,_transparent_70%)] pointer-events-none" />
+
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-700/80 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-600/60">
+            Laboratorium Mini
+          </span>
+          <span className="text-xs font-bold text-amber-300 bg-emerald-950/70 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-400/30">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>+50 Poin Wadah Baru</span>
+          </span>
+        </div>
+
+        <h2 className="text-base font-extrabold tracking-tight text-white mb-1">
+          Koleksi Toples Fermentasi
+        </h2>
+        <p className="text-xs text-emerald-100/90 leading-relaxed mb-3.5 max-w-[280px]">
+          Punya sisa kulit buah segar hari ini? Mulai toples baru dengan takaran formula emas 1:3:10.
+        </p>
+
+        <button
+          onClick={onOpenCreateJar}
+          className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+        >
+          <Plus className="w-4 h-4 text-emerald-800" />
+          <span>Mulai Buat Toples Baru</span>
+        </button>
+      </div>
+
+      {/* 2. STATS RINGKAS & FILTER TAB */}
+      <div className="flex items-center justify-between gap-1 border-b border-stone-200 pb-2">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setFilterTab('all')}
+            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+              filterTab === 'all'
+                ? 'bg-stone-900 text-white'
+                : 'text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            Semua ({jars.length})
+          </button>
+          <button
+            onClick={() => setFilterTab('active')}
+            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+              filterTab === 'active'
+                ? 'bg-emerald-800 text-white'
+                : 'text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            Sedang Aktif ({activeJars.length})
+          </button>
+          <button
+            onClick={() => setFilterTab('completed')}
+            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+              filterTab === 'completed'
+                ? 'bg-amber-800 text-white'
+                : 'text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            Riwayat Panen ({completedJars.length})
+          </button>
+        </div>
+      </div>
+
+      {/* 3. DAFTAR TOPLES AKTIF */}
+      {(filterTab === 'all' || filterTab === 'active') && activeJars.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Toples Dalam Proses Fermentasi</span>
+            </h3>
+            <span className="text-[10px] text-stone-400 font-medium">
+              Target 90 Hari
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {activeJars.map((jar) => {
+              const latestObs = jar.observations[0];
+              const currentDay = latestObs ? latestObs.dayNumber : 1;
+              const progressPercent = Math.min(
+                100,
+                Math.round((currentDay / (jar.targetDays || 90)) * 100)
+              );
+              const status = latestObs ? latestObs.status : 'normal';
+
+              return (
+                <div
+                  key={jar.id}
+                  onClick={() => onOpenJar(jar.id)}
+                  className="enzymate-card p-4 hover:border-emerald-500 hover:shadow-md cursor-pointer transition-all active:scale-[0.99] relative group"
+                >
+                  {/* Top Bar Card */}
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 pr-2">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Aktif
+                        </span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
+                            status === 'normal'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : 'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}
+                        >
+                          {status === 'normal' ? 'Kondisi Normal' : 'Perlu Diperiksa'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-extrabold text-stone-900">
+                        {jar.name}
+                      </h4>
+                      <p className="text-[11px] text-stone-500 mt-0.5 line-clamp-1">
+                        {jar.ingredientsDescription}
+                      </p>
+                    </div>
+
+                    {/* Tombol Hapus jika lebih dari 1 */}
+                    {jars.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Yakin ingin menghapus toples "${jar.name}"?`)) {
+                            onDeleteJar(jar.id);
+                          }
+                        }}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 opacity-80 transition-all"
+                        title="Hapus toples"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Progress Bar Hari Fermentasi */}
+                  <div className="my-2.5">
+                    <div className="flex justify-between items-center text-[10px] text-stone-600 font-semibold mb-1">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-stone-400" />
+                        Hari ke-{currentDay} dari {jar.targetDays || 90}
+                      </span>
+                      <span className="text-emerald-800 font-bold">
+                        {progressPercent}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-stone-100 rounded-full h-2 overflow-hidden border border-stone-200/50">
+                      <div
+                        className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Metrik Wadah & Tombol Buka */}
+                  <div className="flex items-center justify-between pt-2.5 border-t border-stone-100">
+                    <div className="flex items-center gap-3 text-[11px] text-stone-500">
+                      <span className="flex items-center gap-1">
+                        <Droplets className="w-3 h-3 text-sky-600" />
+                        <strong>{jar.containerCapacityLiters}L</strong>
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Scale className="w-3 h-3 text-emerald-600" />
+                        <strong>{jar.organicWeightGrams}g</strong>
+                      </span>
+                      <span className="text-stone-400">
+                        {jar.observations.length}x log
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onOpenJar(jar.id)}
+                      className="flex items-center gap-1 text-xs font-bold text-emerald-800 group-hover:translate-x-0.5 transition-transform"
+                    >
+                      <span>Buka Toples</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 4. DAFTAR RIWAYAT TOPLES PANEN / SELESAI */}
+      {(filterTab === 'all' || filterTab === 'completed') && completedJars.length > 0 && (
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+              <Archive className="w-3.5 h-3.5 text-amber-700" />
+              <span>Riwayat Toples Selesai & Panen</span>
+            </h3>
+            <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+              100% Panen Alami
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            {completedJars.map((jar) => (
+              <div
+                key={jar.id}
+                onClick={() => onOpenJar(jar.id)}
+                className="p-4 rounded-2xl bg-amber-50/50 border border-amber-200 hover:border-amber-400 hover:shadow-md cursor-pointer transition-all active:scale-[0.99] relative group"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 pr-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-amber-700" />
+                        Panen Selesai (90 Hari)
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-extrabold text-stone-900">
+                      {jar.name}
+                    </h4>
+                    <p className="text-[11px] text-stone-600 mt-0.5 line-clamp-1">
+                      {jar.ingredientsDescription}
+                    </p>
+                  </div>
+
+                  {jars.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Yakin ingin menghapus riwayat toples "${jar.name}"?`)) {
+                          onDeleteJar(jar.id);
+                        }
+                      }}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      title="Hapus riwayat toples"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Info Hasil Panen */}
+                <div className="p-2.5 rounded-xl bg-white border border-amber-200/80 mb-2.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-amber-950 font-bold">
+                    <Droplets className="w-4 h-4 text-amber-600" />
+                    <span>Hasil: {jar.harvestYieldMl || 1800} ml Cairan Enzim</span>
+                  </div>
+                  <span className="text-[10px] text-stone-500 font-medium">
+                    Panen: {jar.harvestDate || 'Selesai'}
+                  </span>
+                </div>
+
+                {/* Footer Card */}
+                <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1">
+                  <span>Wadah {jar.containerCapacityLiters}L • {jar.organicWeightGrams}g Organik</span>
+                  <button
+                    type="button"
+                    onClick={() => onOpenJar(jar.id)}
+                    className="flex items-center gap-1 font-bold text-amber-900 group-hover:translate-x-0.5 transition-transform"
+                  >
+                    <span>Lihat Rincian Panen</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Jika Belum Ada Toples di Kategori Tertentu */}
+      {displayedJars.length === 0 && (
+        <div className="p-8 text-center bg-stone-50 rounded-2xl border border-stone-200">
+          <Archive className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+          <h4 className="text-xs font-bold text-stone-700">Tidak ada toples di tab ini</h4>
+          <p className="text-[11px] text-stone-500 mt-1">
+            Klik tombol &quot;Mulai Buat Toples Baru&quot; untuk menambahkan wadah fermentasi.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};

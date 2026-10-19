@@ -1,5 +1,5 @@
 ## 1. Ringkasan Eksekutif
-EnzyMate adalah aplikasi seluler yang dirancang untuk mendampingi anak-anak dalam pembuatan eco-enzyme dari sisa buah dan sayur segar[cite: 1, 7]. Aplikasi ini memecahkan masalah tingginya angka kegagalan pembuatan eco-enzyme akibat kurangnya pemantauan, sekaligus membangun kedekatan anak dengan bahan organik segar[cite: 1]. Menggunakan teknologi *Edge AI* (AI pengenal gambar dan AI berbasis aturan) yang beroperasi 100% tanpa internet, EnzyMate memastikan pemrosesan lokal yang cepat, aman, dan berjejak karbon rendah[cite: 11].
+Enzymo adalah aplikasi seluler yang dirancang untuk mendampingi anak-anak dalam pembuatan eco-enzyme dari sisa buah dan sayur segar[cite: 1, 7]. Aplikasi ini memecahkan masalah tingginya angka kegagalan pembuatan eco-enzyme akibat kurangnya pemantauan, sekaligus membangun kedekatan anak dengan bahan organik segar[cite: 1]. Menggunakan teknologi *Edge AI* (AI pengenal gambar dan AI berbasis aturan) yang beroperasi 100% tanpa internet, Enzymo memastikan pemrosesan lokal yang cepat, aman, dan berjejak karbon rendah[cite: 11].
 
 ## 2. Tujuan & Metrik Keberhasilan
 **Tujuan:**

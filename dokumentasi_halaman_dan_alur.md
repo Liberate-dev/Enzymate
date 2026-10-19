@@ -1,6 +1,6 @@
-# Dokumentasi Struktur Halaman, Fungsi, dan Alur Antarmuka EnzyMate
+# Dokumentasi Struktur Halaman, Fungsi, dan Alur Antarmuka Enzymo
 
-Dokumen ini menjelaskan secara terperinci setiap tampilan layar (screen), modal, fungsi interaksi, serta koneksi data dan navigasi antar halaman pada aplikasi **EnzyMate (Mobile-First Prototype)**.
+Dokumen ini menjelaskan secara terperinci setiap tampilan layar (screen), modal, fungsi interaksi, serta koneksi data dan navigasi antar halaman pada aplikasi **Enzymo (Mobile-First Prototype)**.
 
 ---
 
@@ -96,7 +96,7 @@ flowchart TD
 * **Tujuan:** Menjadi pusat pemantauan visual harian anak, memberikan rasa kepemilikan terhadap toples fermentasi mereka, dan memicu motivasi melalui gamifikasi.
 * **Elemen & Fungsi Utama:**
   1. **Top Status Bar:**
-     * Logo identitas aplikasi (*EnzyMate Cilik*).
+     * Logo identitas aplikasi (*Enzymo Cilik*).
      * Nama Siswa (*Rian - SDN 01*).
      * Tombol interaktif **Streak Harian (Api)** dan **Total Bintang**: Mengklik elemen ini langsung membuka modal pencapaian sekolah.
   2. **Kartu Toples Aktif ([JarIllustration.tsx](file:///D:/Porto/Enzyme/src/components/JarIllustration.tsx)):**
@@ -188,7 +188,7 @@ flowchart TD
 * Papan peringkat antar-kelas sekolah dasar untuk memupuk semangat kolaborasi.
 
 #### M5. Tur Panduan & Spotlight Bokeh ([AppTourGuide.tsx](file:///D:/Porto/Enzyme/src/components/AppTourGuide.tsx))
-* **Penawaran Pertama Kali:** Saat pertama kali aplikasi dibuka, sistem otomatis menanyakan: *"Selamat Datang di EnzyMate! Ingin mengikuti panduan tur singkat?"*.
+* **Penawaran Pertama Kali:** Saat pertama kali aplikasi dibuka, sistem otomatis menanyakan: *"Selamat Datang di Enzymo! Ingin mengikuti panduan tur singkat?"*.
 * **Efek Bokeh & Spotlight:** Layar diberi latar belakang gelap kabur (*blur overlay*) dan menyorot elemen UI aktif dengan kotak lampu sorot (*cutout spotlight box*).
 * **5 Langkah Pengenalan:**
   1. *Toples Fermentasi Aktif* (umur hari, batas 2/3 aman).

@@ -7,7 +7,10 @@ import {
   Home,
   ChevronRight,
   ArrowRight,
-  HelpCircle
+  ArrowLeft,
+  HelpCircle,
+  Layers,
+  Plus
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -16,6 +19,9 @@ import { FeedbackModal } from './components/FeedbackModal';
 import { CalculatorModal } from './components/CalculatorModal';
 import { BadgesModal } from './components/BadgesModal';
 import { AppTourGuide } from './components/AppTourGuide';
+import { JarListModal } from './components/JarListModal';
+import { CreateJarModal } from './components/CreateJarModal';
+import { JarLandingScreen } from './components/JarLandingScreen';
 import {
   JarData,
   UserProgress,
@@ -27,45 +33,104 @@ import {
 } from './types';
 import { evaluateObservation, EvaluationResult } from './ruleEngine';
 
-const INITIAL_JAR: JarData = {
-  id: 'jar-1',
-  name: 'Toples Jeruk & Pepaya Ceria',
-  startDate: '2026-09-24',
-  targetDays: 90,
-  containerCapacityLiters: 3,
-  organicWeightGrams: 450,
-  sugarWeightGrams: 150,
-  waterVolumeMl: 1500,
-  ingredientsDescription: 'Kulit Jeruk Manis, Kulit Pepaya Muda, Batang Sawi',
-  observations: [
-    {
-      id: 'obs-1',
-      dayNumber: 7,
-      date: '2026-10-01',
-      color: 'bening_kuning',
-      aroma: 'manis',
-      surface: 'putih_tipis',
-      gas: 'banyak',
-      status: 'normal',
-      aiFeedback: 'Ragi awal bekerja baik!',
-      requiresAdult: false,
-      earnedPoints: 50
-    },
-    {
-      id: 'obs-2',
-      dayNumber: 13,
-      date: '2026-10-07',
-      color: 'oranye_cokelat',
-      aroma: 'asam_segar',
-      surface: 'putih_tipis',
-      gas: 'sedikit',
-      status: 'normal',
-      aiFeedback: 'Wangi asam segar terdeteksi.',
-      requiresAdult: false,
-      earnedPoints: 50
-    }
-  ]
-};
+const INITIAL_JARS: JarData[] = [
+  {
+    id: 'jar-1',
+    name: 'Toples Jeruk & Pepaya Ceria',
+    startDate: '2026-09-24',
+    targetDays: 90,
+    containerCapacityLiters: 3,
+    organicWeightGrams: 450,
+    sugarWeightGrams: 150,
+    waterVolumeMl: 1500,
+    ingredientsDescription: 'Kulit Jeruk Manis, Kulit Pepaya Muda, Batang Sawi',
+    observations: [
+      {
+        id: 'obs-1',
+        dayNumber: 7,
+        date: '2026-10-01',
+        color: 'bening_kuning',
+        aroma: 'manis',
+        surface: 'putih_tipis',
+        gas: 'banyak',
+        status: 'normal',
+        aiFeedback: 'Ragi awal bekerja baik!',
+        requiresAdult: false,
+        earnedPoints: 50
+      },
+      {
+        id: 'obs-2',
+        dayNumber: 14,
+        date: '2026-10-07',
+        color: 'oranye_cokelat',
+        aroma: 'asam_segar',
+        surface: 'putih_tipis',
+        gas: 'sedikit',
+        status: 'normal',
+        aiFeedback: 'Wangi asam segar terdeteksi.',
+        requiresAdult: false,
+        earnedPoints: 50
+      }
+    ]
+  },
+  {
+    id: 'jar-2',
+    name: 'Toples Sayur Sawi & Kangkung 5A',
+    startDate: '2026-10-06',
+    targetDays: 90,
+    containerCapacityLiters: 2,
+    organicWeightGrams: 300,
+    sugarWeightGrams: 100,
+    waterVolumeMl: 1000,
+    ingredientsDescription: 'Sisa Batang Sawi Hijau, Batang Kangkung, Kulit Mentimun',
+    observations: [
+      {
+        id: 'obs-2-1',
+        dayNumber: 3,
+        date: '2026-10-09',
+        color: 'bening_kuning',
+        aroma: 'manis',
+        surface: 'bersih',
+        gas: 'sedikit',
+        status: 'normal',
+        aiFeedback: 'Bakteri mulai aktif membentuk gelembung halus.',
+        requiresAdult: false,
+        earnedPoints: 50
+      }
+    ]
+  },
+  {
+    id: 'jar-hist-1',
+    name: 'Toples Sitrus Angkatan 2025',
+    startDate: '2026-05-10',
+    targetDays: 90,
+    containerCapacityLiters: 3,
+    organicWeightGrams: 450,
+    sugarWeightGrams: 150,
+    waterVolumeMl: 1500,
+    ingredientsDescription: 'Kulit Jeruk Nipis, Kulit Lemon, Kulit Jeruk Bali',
+    isCompleted: true,
+    harvestDate: '2026-08-10',
+    harvestYieldMl: 1800,
+    observations: [
+      {
+        id: 'obs-h-1',
+        dayNumber: 90,
+        date: '2026-08-10',
+        color: 'cokelat_tua',
+        aroma: 'asam_segar',
+        surface: 'putih_tipis',
+        gas: 'tidak_ada',
+        status: 'normal',
+        aiFeedback: 'Panen sukses sempurna! Cairan beraroma sitrus segar khas eco-enzyme matang.',
+        requiresAdult: false,
+        earnedPoints: 100
+      }
+    ]
+  }
+];
+
+const INITIAL_JAR = INITIAL_JARS[0];
 
 const INITIAL_USER: UserProgress = {
   studentName: 'Rian (Siswa SDN 01)',
@@ -108,10 +173,36 @@ const INITIAL_USER: UserProgress = {
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'home' | 'scanner' | 'observation'>('home');
-  const [jar, setJar] = useState<JarData>(() => {
-    const saved = localStorage.getItem('enzymate_jar');
-    return saved ? JSON.parse(saved) : INITIAL_JAR;
+  const [jars, setJars] = useState<JarData[]>(() => {
+    const savedJars = localStorage.getItem('enzymate_jars');
+    if (savedJars) {
+      try {
+        const parsed = JSON.parse(savedJars);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    const savedSingle = localStorage.getItem('enzymate_jar');
+    if (savedSingle) {
+      try {
+        const parsed = JSON.parse(savedSingle);
+        if (parsed && parsed.id) return [parsed];
+      } catch (e) {}
+    }
+    return INITIAL_JARS;
   });
+
+  const [activeJarId, setActiveJarId] = useState<string>(() => {
+    const savedId = localStorage.getItem('enzymate_active_jar_id');
+    return savedId || INITIAL_JAR.id;
+  });
+
+  const [showJarList, setShowJarList] = useState<boolean>(false);
+  const [showCreateJar, setShowCreateJar] = useState<boolean>(false);
+  const [homeViewMode, setHomeViewMode] = useState<'list' | 'detail'>('list');
+
+  const activeJar = jars.find((j) => j.id === activeJarId) || jars[0] || INITIAL_JAR;
+  const jar = activeJar;
+
   const [user, setUser] = useState<UserProgress>(() => {
     const saved = localStorage.getItem('enzymate_user');
     return saved ? JSON.parse(saved) : INITIAL_USER;
@@ -121,7 +212,13 @@ export const App: React.FC = () => {
     return localStorage.getItem('enzymate_observed_today') === 'true';
   });
 
-  const [currentDay, setCurrentDay] = useState<number>(14);
+  const [currentDay, setCurrentDay] = useState<number>(() => {
+    if (activeJar && activeJar.observations.length > 0) {
+      return activeJar.observations[0].dayNumber;
+    }
+    return 14;
+  });
+
   const [feedbackResult, setFeedbackResult] = useState<EvaluationResult | null>(null);
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [calculatorMaterial, setCalculatorMaterial] = useState<ScannedMaterial | null>(null);
@@ -133,8 +230,13 @@ export const App: React.FC = () => {
 
   // Sync to LocalStorage
   useEffect(() => {
-    localStorage.setItem('enzymate_jar', JSON.stringify(jar));
-  }, [jar]);
+    localStorage.setItem('enzymate_jars', JSON.stringify(jars));
+    localStorage.setItem('enzymate_jar', JSON.stringify(activeJar));
+  }, [jars, activeJar]);
+
+  useEffect(() => {
+    localStorage.setItem('enzymate_active_jar_id', activeJarId);
+  }, [activeJarId]);
 
   useEffect(() => {
     localStorage.setItem('enzymate_user', JSON.stringify(user));
@@ -152,6 +254,54 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleSelectJar = (id: string) => {
+    setActiveJarId(id);
+    const target = jars.find((j) => j.id === id);
+    if (target && target.observations.length > 0) {
+      setCurrentDay(target.observations[0].dayNumber);
+    } else {
+      setCurrentDay(1);
+    }
+  };
+
+  const handleOpenJarDetail = (jarId: string) => {
+    setActiveJarId(jarId);
+    const target = jars.find((j) => j.id === jarId);
+    if (target && target.observations.length > 0) {
+      setCurrentDay(target.observations[0].dayNumber);
+    } else {
+      setCurrentDay(1);
+    }
+    setHomeViewMode('detail');
+  };
+
+  const handleCreateJar = (newJar: JarData) => {
+    setJars((prev) => [newJar, ...prev]);
+    setActiveJarId(newJar.id);
+    setCurrentDay(1);
+    setShowCreateJar(false);
+    setHomeViewMode('detail');
+    setUser((prev) => ({
+      ...prev,
+      totalPoints: prev.totalPoints + 50,
+      organicSavedGrams: prev.organicSavedGrams + newJar.organicWeightGrams
+    }));
+  };
+
+  const handleDeleteJar = (id: string) => {
+    if (jars.length <= 1) return;
+    const remaining = jars.filter((j) => j.id !== id);
+    setJars(remaining);
+    if (activeJarId === id) {
+      setActiveJarId(remaining[0].id);
+      if (remaining[0].observations.length > 0) {
+        setCurrentDay(remaining[0].observations[0].dayNumber);
+      } else {
+        setCurrentDay(1);
+      }
+    }
+  };
+
   const handleStartFermentation = (material: ScannedMaterial) => {
     const addedWeight = material.suggestedWeight || 150;
     setUser((prev) => ({
@@ -160,11 +310,17 @@ export const App: React.FC = () => {
       totalPoints: prev.totalPoints + 30
     }));
 
-    setJar((prev) => ({
-      ...prev,
-      organicWeightGrams: prev.organicWeightGrams + addedWeight,
-      ingredientsDescription: `${prev.ingredientsDescription}, ${material.name}`
-    }));
+    setJars((prev) =>
+      prev.map((j) =>
+        j.id === activeJar.id
+          ? {
+              ...j,
+              organicWeightGrams: j.organicWeightGrams + addedWeight,
+              ingredientsDescription: `${j.ingredientsDescription}, ${material.name}`
+            }
+          : j
+      )
+    );
 
     setActiveTab('home');
   };
@@ -206,10 +362,13 @@ export const App: React.FC = () => {
       earnedPoints: evalResult.points
     };
 
-    setJar((prev) => ({
-      ...prev,
-      observations: [newRecord, ...prev.observations]
-    }));
+    setJars((prev) =>
+      prev.map((j) =>
+        j.id === activeJar.id
+          ? { ...j, observations: [newRecord, ...j.observations] }
+          : j
+      )
+    );
 
     setUser((prev) => ({
       ...prev,
@@ -229,6 +388,7 @@ export const App: React.FC = () => {
     setShowTourPrompt(false);
     localStorage.setItem('enzymate_tour_prompted', 'true');
     setActiveTab('home');
+    setHomeViewMode('detail');
     setIsTourOpen(true);
   };
 
@@ -248,7 +408,7 @@ export const App: React.FC = () => {
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="font-extrabold text-base tracking-tight text-white">
-                EnzyMate
+                Enzymo
               </h1>
               <span className="text-[10px] font-semibold bg-emerald-900/80 text-emerald-200 px-1.5 py-0.5 rounded">
                 Cilik
@@ -296,25 +456,72 @@ export const App: React.FC = () => {
 
         {/* MAIN BODY AREA */}
         <main className="flex-1 flex flex-col overflow-hidden relative">
-          {activeTab === 'home' && (
-            <div id="main-scroll-container" className="flex-1 overflow-y-auto p-4 space-y-3.5 pb-24">
-              {/* KARTU TOPLES AKTIF (Target Spotlight Step 1) */}
+          {activeTab === 'home' &&
+            (homeViewMode === 'list' ? (
+              <JarLandingScreen
+                jars={jars}
+                onOpenJar={handleOpenJarDetail}
+                onOpenCreateJar={() => setShowCreateJar(true)}
+                onDeleteJar={handleDeleteJar}
+              />
+            ) : (
+              <div id="main-scroll-container" className="flex-1 overflow-y-auto p-4 space-y-3.5 pb-24">
+                {/* NAVIGASI KEMBALI KE DAFTAR TOPLES */}
+                <div className="flex items-center justify-between pb-0.5">
+                  <button
+                    onClick={() => setHomeViewMode('list')}
+                    className="text-xs font-bold text-stone-700 hover:text-stone-900 bg-white hover:bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-200 shadow-2xs flex items-center gap-1.5 transition-colors"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5 text-emerald-800" />
+                    <span>Kembali ke Daftar Toples</span>
+                  </button>
+                  <button
+                    onClick={() => setShowJarList(true)}
+                    className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors"
+                  >
+                    <Layers className="w-3 h-3 text-emerald-700" />
+                    <span>Ganti Toples</span>
+                  </button>
+                </div>
+
+                {/* KARTU TOPLES AKTIF (Target Spotlight Step 1) */}
               <div id="tour-jar-card" className="enzymate-card p-4 relative">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Toples Aktif
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        Toples Aktif
+                      </span>
+                      <button
+                        onClick={() => setShowJarList(true)}
+                        className="text-[10px] font-bold text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                        title="Daftar koleksi toples"
+                      >
+                        <Layers className="w-3 h-3 text-emerald-700" />
+                        <span>Koleksi ({jars.length})</span>
+                      </button>
+                    </div>
                     <h2 className="text-base font-extrabold text-stone-900 mt-1">
-                      {jar.name}
+                      {activeJar.name}
                     </h2>
                   </div>
-                  <button
-                    onClick={() => handleOpenCalculatorWithMaterial()}
-                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 transition-colors"
-                  >
-                    Aturan Rasio
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setShowCreateJar(true)}
+                      className="text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-100/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 shadow-2xs transition-colors"
+                      title="Tambah toples baru"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Toples Baru</span>
+                    </button>
+                    <button
+                      onClick={() => handleOpenCalculatorWithMaterial()}
+                      className="text-xs font-semibold text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded-lg border border-stone-200 transition-colors"
+                      title="Lihat formula rasio"
+                    >
+                      Rasio
+                    </button>
+                  </div>
                 </div>
 
                 {/* Ilustrasi Toples Interaktif */}
@@ -467,7 +674,7 @@ export const App: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
+            ))}
 
           {activeTab === 'scanner' && (
             <ScannerScreen
@@ -490,13 +697,19 @@ export const App: React.FC = () => {
         {/* BOTTOM NAVIGATION BAR */}
         <nav className="bg-white border-t border-stone-200 px-6 py-2 flex items-center justify-between sticky bottom-0 z-30 shadow-md">
           <button
-            onClick={() => setActiveTab('home')}
+            onClick={() => {
+              if (activeTab === 'home' && homeViewMode === 'detail') {
+                setHomeViewMode('list');
+              } else {
+                setActiveTab('home');
+              }
+            }}
             className={`flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors w-16 ${
               activeTab === 'home' ? 'text-emerald-800' : 'text-stone-400 hover:text-stone-600'
             }`}
           >
             <Home className="w-5 h-5" />
-            <span>Beranda</span>
+            <span>{activeTab === 'home' && homeViewMode === 'detail' ? 'Daftar' : 'Beranda'}</span>
           </button>
 
           {/* Tombol Menonjol untuk Scan AI (Target Spotlight Step 4) */}
@@ -573,6 +786,26 @@ export const App: React.FC = () => {
             totalPoints={user.totalPoints}
             organicSavedGrams={user.organicSavedGrams}
             onClose={() => setShowBadges(false)}
+          />
+        )}
+
+        {/* MODAL DAFTAR KOLEKSI TOPLES */}
+        {showJarList && (
+          <JarListModal
+            jars={jars}
+            activeJarId={activeJarId}
+            onSelectJar={handleSelectJar}
+            onOpenCreateJar={() => setShowCreateJar(true)}
+            onDeleteJar={handleDeleteJar}
+            onClose={() => setShowJarList(false)}
+          />
+        )}
+
+        {/* MODAL BUAT TOPLES BARU */}
+        {showCreateJar && (
+          <CreateJarModal
+            onClose={() => setShowCreateJar(false)}
+            onCreateJar={handleCreateJar}
           />
         )}
       </div>
