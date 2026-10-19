@@ -1,5 +1,6 @@
 import React from 'react';
 import { FermentStatus } from '../types';
+import { useLanguage, UI_TEXT } from '../i18n';
 
 interface JarIllustrationProps {
   dayNumber: number;
@@ -13,9 +14,10 @@ export const JarIllustration: React.FC<JarIllustrationProps> = ({
   dayNumber,
   totalDays = 90,
   status = 'normal',
-  organicWeight = 300,
   className = ''
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].jarIllustration;
   const percentage = Math.min(100, Math.round((dayNumber / totalDays) * 100));
 
   // Warna cairan berdasarkan umur & status
@@ -45,8 +47,8 @@ export const JarIllustration: React.FC<JarIllustrationProps> = ({
 
           {/* Garis Batas Aman 2/3 Kapasitas (Educational Guideline) */}
           <line x1="28" y1="84" x2="132" y2="84" stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="3 3" />
-          <text x="32" y="78" fill="#D97706" fontSize="7" fontWeight="bold">BATAS AMAN (2/3)</text>
-          <text x="32" y="70" fill="#94A3B8" fontSize="6.5">Ruang Gas Fermentasi</text>
+          <text x="32" y="78" fill="#D97706" fontSize="7" fontWeight="bold">{t.safeLimitSvg}</text>
+          <text x="32" y="70" fill="#94A3B8" fontSize="6.5">{t.gasSpaceSvg}</text>
 
           {/* Cairan Fermentasi (Maksimal 2/3) */}
           <defs>
@@ -109,7 +111,7 @@ export const JarIllustration: React.FC<JarIllustrationProps> = ({
 
         {/* Floating Day Badge */}
         <div className="absolute -bottom-2 bg-emerald-800 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1 border border-emerald-600">
-          <span>Hari ke-{dayNumber}</span>
+          <span>{t.dayBadge(dayNumber)}</span>
           <span className="text-emerald-300">/ {totalDays}</span>
         </div>
       </div>
@@ -117,7 +119,7 @@ export const JarIllustration: React.FC<JarIllustrationProps> = ({
       {/* Progress Bar Persentase Fermentasi */}
       <div className="w-full mt-5 px-4">
         <div className="flex justify-between items-center text-xs font-semibold mb-1">
-          <span className="text-stone-600">Perjalanan Panen</span>
+          <span className="text-stone-600">{t.harvestJourney}</span>
           <span className="text-emerald-700 font-bold">{percentage}%</span>
         </div>
         <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
@@ -127,8 +129,8 @@ export const JarIllustration: React.FC<JarIllustrationProps> = ({
           />
         </div>
         <div className="flex justify-between items-center text-[10px] text-stone-600 mt-1">
-          <span>Hari 1 (Mulai)</span>
-          <span>90 Hari (Panen Alami)</span>
+          <span>{t.day1Start}</span>
+          <span>{t.day90Harvest}</span>
         </div>
       </div>
     </div>

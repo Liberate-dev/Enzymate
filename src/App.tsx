@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   HelpCircle,
   Layers,
-  Plus
+  Plus,
+  Globe
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -32,6 +33,7 @@ import {
   FermentGas
 } from './types';
 import { evaluateObservation, EvaluationResult } from './ruleEngine';
+import { useLanguage, UI_TEXT, localizeJar, localizeText } from './i18n';
 
 const INITIAL_JARS: JarData[] = [
   {
@@ -172,6 +174,9 @@ const INITIAL_USER: UserProgress = {
 };
 
 export const App: React.FC = () => {
+  const { lang, setLang } = useLanguage();
+  const t = UI_TEXT[lang];
+
   const [activeTab, setActiveTab] = useState<'home' | 'scanner' | 'observation'>('home');
   const [jars, setJars] = useState<JarData[]>(() => {
     const savedJars = localStorage.getItem('enzymate_jars');
@@ -200,7 +205,8 @@ export const App: React.FC = () => {
   const [showCreateJar, setShowCreateJar] = useState<boolean>(false);
   const [homeViewMode, setHomeViewMode] = useState<'list' | 'detail'>('list');
 
-  const activeJar = jars.find((j) => j.id === activeJarId) || jars[0] || INITIAL_JAR;
+  const rawActiveJar = jars.find((j) => j.id === activeJarId) || jars[0] || INITIAL_JAR;
+  const activeJar = localizeJar(rawActiveJar, lang);
   const jar = activeJar;
 
   const [user, setUser] = useState<UserProgress>(() => {
@@ -213,13 +219,30 @@ export const App: React.FC = () => {
   });
 
   const [currentDay, setCurrentDay] = useState<number>(() => {
-    if (activeJar && activeJar.observations.length > 0) {
-      return activeJar.observations[0].dayNumber;
+    if (rawActiveJar && rawActiveJar.observations.length > 0) {
+      return rawActiveJar.observations[0].dayNumber;
     }
     return 14;
   });
 
-  const [feedbackResult, setFeedbackResult] = useState<EvaluationResult | null>(null);
+  const [feedbackInput, setFeedbackInput] = useState<{
+    dayNumber: number;
+    color: FermentColor;
+    aroma: FermentAroma;
+    surface: FermentSurface;
+    gas: FermentGas;
+  } | null>(null);
+
+  const feedbackResult: EvaluationResult | null = feedbackInput
+    ? evaluateObservation(
+        feedbackInput.dayNumber,
+        feedbackInput.color,
+        feedbackInput.aroma,
+        feedbackInput.surface,
+        feedbackInput.gas,
+        lang
+      )
+    : null;
   const [showCalculator, setShowCalculator] = useState<boolean>(false);
   const [calculatorMaterial, setCalculatorMaterial] = useState<ScannedMaterial | null>(null);
   const [showBadges, setShowBadges] = useState<boolean>(false);
@@ -231,8 +254,8 @@ export const App: React.FC = () => {
   // Sync to LocalStorage
   useEffect(() => {
     localStorage.setItem('enzymate_jars', JSON.stringify(jars));
-    localStorage.setItem('enzymate_jar', JSON.stringify(activeJar));
-  }, [jars, activeJar]);
+    localStorage.setItem('enzymate_jar', JSON.stringify(rawActiveJar));
+  }, [jars, rawActiveJar]);
 
   useEffect(() => {
     localStorage.setItem('enzymate_active_jar_id', activeJarId);
@@ -312,7 +335,7 @@ export const App: React.FC = () => {
 
     setJars((prev) =>
       prev.map((j) =>
-        j.id === activeJar.id
+        j.id === rawActiveJar.id
           ? {
               ...j,
               organicWeightGrams: j.organicWeightGrams + addedWeight,
@@ -345,7 +368,8 @@ export const App: React.FC = () => {
       data.color,
       data.aroma,
       data.surface,
-      data.gas
+      data.gas,
+      lang
     );
 
     const newRecord = {
@@ -364,7 +388,7 @@ export const App: React.FC = () => {
 
     setJars((prev) =>
       prev.map((j) =>
-        j.id === activeJar.id
+        j.id === rawActiveJar.id
           ? { ...j, observations: [newRecord, ...j.observations] }
           : j
       )
@@ -377,7 +401,13 @@ export const App: React.FC = () => {
     }));
 
     setHasObservedToday(true);
-    setFeedbackResult(evalResult);
+    setFeedbackInput({
+      dayNumber: currentDay,
+      color: data.color,
+      aroma: data.aroma,
+      surface: data.surface,
+      gas: data.gas
+    });
   };
 
   const handleResetToday = () => {
@@ -411,24 +441,55 @@ export const App: React.FC = () => {
                 Enzymo
               </h1>
               <span className="text-[10px] font-semibold bg-emerald-900/80 text-emerald-200 px-1.5 py-0.5 rounded">
-                Cilik
+                {t.header.subtitleBadge}
               </span>
             </div>
             <p className="text-[11px] text-emerald-200/80 font-medium">
-              {user.studentName}
+              {localizeText(user.studentName, lang)}
             </p>
           </div>
 
-          {/* Gamifikasi Badges & Ikon Bantuan Tur */}
+          {/* Language Switcher, Gamifikasi Badges & Ikon Bantuan Tur */}
           <div className="flex items-center gap-1.5">
+            {/* Segmented Pill Language Switcher (ID / EN) */}
+            <div
+              className="flex items-center bg-emerald-950/60 p-0.5 rounded-lg border border-emerald-700/60"
+              title={t.header.langTooltip}
+            >
+              <Globe className="w-3 h-3 text-emerald-300 ml-1 mr-0.5 hidden sm:inline" />
+              <button
+                type="button"
+                onClick={() => setLang('id')}
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all ${
+                  lang === 'id'
+                    ? 'bg-white text-emerald-900 shadow-2xs'
+                    : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                ID
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('en')}
+                className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold transition-all ${
+                  lang === 'en'
+                    ? 'bg-white text-emerald-900 shadow-2xs'
+                    : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             {/* Tombol Akses Tutorial Tour Kapan Saja */}
             <button
               onClick={() => {
                 setActiveTab('home');
+                setHomeViewMode('detail');
                 setIsTourOpen(true);
               }}
               className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-700/60 transition-colors"
-              title="Buka Panduan Tur Aplikasi"
+              title={t.header.tourTooltip}
             >
               <HelpCircle className="w-4 h-4" />
             </button>
@@ -473,14 +534,14 @@ export const App: React.FC = () => {
                     className="text-xs font-bold text-stone-700 hover:text-stone-900 bg-white hover:bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-200 shadow-2xs flex items-center gap-1.5 transition-colors"
                   >
                     <ArrowLeft className="w-3.5 h-3.5 text-emerald-800" />
-                    <span>Kembali ke Daftar Toples</span>
+                    <span>{t.homeDetail.backToList}</span>
                   </button>
                   <button
                     onClick={() => setShowJarList(true)}
                     className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1 transition-colors"
                   >
                     <Layers className="w-3 h-3 text-emerald-700" />
-                    <span>Ganti Toples</span>
+                    <span>{t.homeDetail.switchJar}</span>
                   </button>
                 </div>
 
@@ -490,15 +551,15 @@ export const App: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] uppercase font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        Toples Aktif
+                        {t.homeDetail.activeJarBadge}
                       </span>
                       <button
                         onClick={() => setShowJarList(true)}
                         className="text-[10px] font-bold text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
-                        title="Daftar koleksi toples"
+                        title={t.homeDetail.collectionTooltip}
                       >
                         <Layers className="w-3 h-3 text-emerald-700" />
-                        <span>Koleksi ({jars.length})</span>
+                        <span>{t.homeDetail.collectionBtn(jars.length)}</span>
                       </button>
                     </div>
                     <h2 className="text-base font-extrabold text-stone-900 mt-1">
@@ -509,17 +570,17 @@ export const App: React.FC = () => {
                     <button
                       onClick={() => setShowCreateJar(true)}
                       className="text-xs font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-100/70 hover:bg-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 shadow-2xs transition-colors"
-                      title="Tambah toples baru"
+                      title={t.homeDetail.newJarTooltip}
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Toples Baru</span>
+                      <span>{t.homeDetail.newJarBtn}</span>
                     </button>
                     <button
                       onClick={() => handleOpenCalculatorWithMaterial()}
                       className="text-xs font-semibold text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded-lg border border-stone-200 transition-colors"
-                      title="Lihat formula rasio"
+                      title={t.homeDetail.ratioTooltip}
                     >
-                      Rasio
+                      {t.homeDetail.ratioBtn}
                     </button>
                   </div>
                 </div>
@@ -535,9 +596,9 @@ export const App: React.FC = () => {
 
                 {/* Status Bar Toples */}
                 <div className="mt-3.5 pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-600">
-                  <span className="text-[11px] font-medium">Batas Aman 2/3 Terjaga</span>
+                  <span className="text-[11px] font-medium">{t.homeDetail.safeLimitKept}</span>
                   <span className="font-semibold text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
-                    {currentStatus === 'normal' ? 'Kondisi Normal' : 'Butuh Pengawasan'}
+                    {currentStatus === 'normal' ? t.homeDetail.statusNormal : t.homeDetail.statusNeedsAttention}
                   </span>
                 </div>
               </div>
@@ -546,28 +607,28 @@ export const App: React.FC = () => {
               <div id="tour-calculator-card" className="p-4 rounded-2xl bg-stone-900 text-white border border-stone-800">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                    Formula 1 : 3 : 10
+                    {t.homeDetail.formulaTitle}
                   </span>
-                  <span className="text-[10px] text-stone-400">Aturan Wadah & Air</span>
+                  <span className="text-[10px] text-stone-400">{t.homeDetail.containerWaterRule}</span>
                 </div>
 
                 <h3 className="font-bold text-sm text-white">
-                  Panduan Takaran Bahan
+                  {t.homeDetail.dosageGuideTitle}
                 </h3>
                 <p className="text-xs text-stone-300 mt-1 leading-snug">
-                  Kalkulator praktis untuk menentukan berat gula, sisa kulit buah, dan air agar fermentasi tidak gagal.
+                  {t.homeDetail.dosageGuideDesc}
                 </p>
 
                 {/* Indikator Pill Formula */}
                 <div className="grid grid-cols-3 gap-2 py-2.5 my-1 text-center text-[11px] font-medium">
                   <div className="bg-stone-800 rounded-lg py-1.5 border border-stone-700">
-                    <strong className="text-amber-400 font-bold">1</strong> Gula
+                    <strong className="text-amber-400 font-bold">1</strong> {t.homeDetail.sugar}
                   </div>
                   <div className="bg-stone-800 rounded-lg py-1.5 border border-stone-700">
-                    <strong className="text-emerald-400 font-bold">3</strong> Sisa Buah
+                    <strong className="text-emerald-400 font-bold">3</strong> {t.homeDetail.fruitScraps}
                   </div>
                   <div className="bg-stone-800 rounded-lg py-1.5 border border-stone-700">
-                    <strong className="text-sky-400 font-bold">10</strong> Air
+                    <strong className="text-sky-400 font-bold">10</strong> {t.homeDetail.water}
                   </div>
                 </div>
 
@@ -575,7 +636,7 @@ export const App: React.FC = () => {
                   onClick={() => handleOpenCalculatorWithMaterial()}
                   className="w-full mt-1.5 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                 >
-                  <span>Buka Kalkulator Toples</span>
+                  <span>{t.homeDetail.openCalculatorBtn}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -585,34 +646,34 @@ export const App: React.FC = () => {
                 <div className="flex items-center justify-between mb-1.5">
                   <div>
                     <h3 className="font-bold text-xs text-stone-900">
-                      Misi Observasi Hari ke-{currentDay}
+                      {t.homeDetail.missionTitle(currentDay)}
                     </h3>
                     <p className="text-[11px] text-stone-500">
-                      Periksa aroma dan rilis gas perlahan
+                      {t.homeDetail.missionSubtitle}
                     </p>
                   </div>
                   {hasObservedToday ? (
                     <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Selesai
+                      {t.homeDetail.completedBadge}
                     </span>
                   ) : (
                     <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      Menunggu
+                      {t.homeDetail.pendingBadge}
                     </span>
                   )}
                 </div>
 
                 <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
                   {hasObservedToday
-                    ? 'Pengamatan hari ini telah selesai dicatat. Toples tetap tertutup rapat.'
-                    : 'Catat aroma, warna, dan kondisi toples untuk memantau aktivitas mikroba.'}
+                    ? t.homeDetail.missionDescDone
+                    : t.homeDetail.missionDescPending}
                 </p>
 
                 <button
                   onClick={() => setActiveTab('observation')}
                   className="w-full py-2.5 px-3 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-colors"
                 >
-                  <span>{hasObservedToday ? 'Buka Ruang Observasi' : 'Mulai Pengamatan Hari Ini'}</span>
+                  <span>{hasObservedToday ? t.homeDetail.openObservationRoom : t.homeDetail.startObservationToday}</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -624,10 +685,10 @@ export const App: React.FC = () => {
                   className="p-3 bg-gradient-to-br from-amber-50 to-orange-50/40 rounded-xl border border-amber-200/90 text-left hover:border-amber-300 transition-all shadow-xs"
                 >
                   <span className="text-[9px] uppercase font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded inline-block mb-1">
-                    Klasemen Siswa
+                    {t.homeDetail.studentLeaderboardTag}
                   </span>
-                  <div className="text-xs font-bold text-amber-950">Peringkat & Lencana</div>
-                  <div className="text-[10px] text-amber-800/80 mt-0.5">Misi SDG sekolah</div>
+                  <div className="text-xs font-bold text-amber-950">{t.homeDetail.rankAndBadges}</div>
+                  <div className="text-[10px] text-amber-800/80 mt-0.5">{t.homeDetail.schoolSdgMission}</div>
                 </button>
 
                 <button
@@ -635,10 +696,10 @@ export const App: React.FC = () => {
                   className="p-3 bg-white rounded-xl border border-stone-200 text-left hover:border-stone-300 transition-colors shadow-xs"
                 >
                   <span className="text-[9px] uppercase font-semibold text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded inline-block mb-1">
-                    Edge AI
+                    {t.homeDetail.edgeAiTag}
                   </span>
-                  <div className="text-xs font-bold text-stone-800">Scan Bahan Baru</div>
-                  <div className="text-[10px] text-stone-500 mt-0.5">Pemindai lokal offline</div>
+                  <div className="text-xs font-bold text-stone-800">{t.homeDetail.scanNewMaterial}</div>
+                  <div className="text-[10px] text-stone-500 mt-0.5">{t.homeDetail.offlineLocalScanner}</div>
                 </button>
               </div>
 
@@ -646,10 +707,10 @@ export const App: React.FC = () => {
               <div className="enzymate-card p-3.5">
                 <div className="flex items-center justify-between mb-2 pb-2 border-b border-stone-100">
                   <h3 className="font-bold text-xs text-stone-800">
-                    Catatan Pengamatan Terakhir
+                    {t.homeDetail.recentObservationsTitle}
                   </h3>
                   <span className="text-[10px] text-stone-500">
-                    {jar.observations.length} Catatan
+                    {t.homeDetail.recordsCount(jar.observations.length)}
                   </span>
                 </div>
 
@@ -660,14 +721,14 @@ export const App: React.FC = () => {
                       className="p-2 rounded-lg bg-stone-50 border border-stone-200 flex items-center justify-between text-xs"
                     >
                       <div>
-                        <div className="font-semibold text-stone-800">Hari ke-{obs.dayNumber}</div>
+                        <div className="font-semibold text-stone-800">{t.homeDetail.dayLabel(obs.dayNumber)}</div>
                         <div className="text-[10px] text-stone-500">
-                          {obs.aroma === 'asam_segar' ? 'Aroma Asam Segar' : 'Aroma Normal'} •{' '}
-                          {obs.surface === 'putih_tipis' ? 'Jamur Pitera Baik' : 'Permukaan Bersih'}
+                          {obs.aroma === 'asam_segar' ? t.homeDetail.aromaFreshSour : t.homeDetail.aromaNormal} •{' '}
+                          {obs.surface === 'putih_tipis' ? t.homeDetail.surfacePitera : t.homeDetail.surfaceClean}
                         </div>
                       </div>
                       <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                        +{obs.earnedPoints} Poin
+                        {t.homeDetail.pointsEarned(obs.earnedPoints)}
                       </span>
                     </div>
                   ))}
@@ -709,7 +770,7 @@ export const App: React.FC = () => {
             }`}
           >
             <Home className="w-5 h-5" />
-            <span>{activeTab === 'home' && homeViewMode === 'detail' ? 'Daftar' : 'Beranda'}</span>
+            <span>{activeTab === 'home' && homeViewMode === 'detail' ? t.nav.list : t.nav.home}</span>
           </button>
 
           {/* Tombol Menonjol untuk Scan AI (Target Spotlight Step 4) */}
@@ -732,7 +793,7 @@ export const App: React.FC = () => {
                 activeTab === 'scanner' ? 'text-emerald-800' : 'text-stone-500'
               }`}
             >
-              Scan AI
+              {t.nav.scanAi}
             </span>
           </button>
 
@@ -743,7 +804,7 @@ export const App: React.FC = () => {
             }`}
           >
             <ClipboardList className="w-5 h-5" />
-            <span>Observasi</span>
+            <span>{t.nav.observation}</span>
           </button>
         </nav>
 
@@ -761,7 +822,7 @@ export const App: React.FC = () => {
           <FeedbackModal
             result={feedbackResult}
             onClose={() => {
-              setFeedbackResult(null);
+              setFeedbackInput(null);
               setActiveTab('home');
             }}
           />

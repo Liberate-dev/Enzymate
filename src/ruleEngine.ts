@@ -4,9 +4,9 @@ import {
   FermentSurface,
   FermentGas,
   FermentStatus,
-  MaterialCategory,
   ScannedMaterial
 } from './types';
+import { Language } from './i18n';
 
 export interface EvaluationResult {
   status: FermentStatus;
@@ -27,10 +27,24 @@ export function evaluateObservation(
   color: FermentColor,
   aroma: FermentAroma,
   surface: FermentSurface,
-  gas: FermentGas
+  gas: FermentGas,
+  lang: Language = 'id'
 ): EvaluationResult {
   // 1. Check CRITICAL FAILURE conditions first (Aroma busuk ATAU Jamur berbulu hitam/hijau/warna)
   if (surface === 'jamur_berbulu' || aroma === 'busuk') {
+    if (lang === 'en') {
+      return {
+        status: 'failed',
+        headline: 'Stop! Adult Assistance Needed',
+        feedback:
+          'Hello Enzy Friend! A foul odor or fuzzy mold was detected. Don’t be sad—this is all part of learning natural science. Please call your teacher or parent right away!',
+        mascotMood: 'danger',
+        requiresAdult: true,
+        actionAdvice:
+          'SAFETY WARNING: Children must not touch the mold directly or pour out the jar liquid. An adult supervisor should inspect and clean the container safely.',
+        points: 10
+      };
+    }
     return {
       status: 'failed',
       headline: 'Stop! Perlu Bantuan Pendamping',
@@ -46,6 +60,19 @@ export function evaluateObservation(
 
   // 2. Check WARNING conditions (Aroma alkohol menyengat ATAU gas berlebih di toples)
   if (aroma === 'alkohol') {
+    if (lang === 'en') {
+      return {
+        status: 'attention',
+        headline: 'Strong Alcohol Aroma Detected!',
+        feedback:
+          'Fermentation is actively producing natural alcohol! Don’t worry—slowly open the lid briefly to burp out the gas, then seal it tightly again.',
+        mascotMood: 'warning',
+        requiresAdult: false,
+        actionAdvice:
+          'Make sure the jar is stored in a cool, shaded place at room temperature (away from direct sunlight). Ask a parent for help if the lid feels too tight.',
+        points: 25
+      };
+    }
     return {
       status: 'attention',
       headline: 'Aroma Alkohol Sedang Kuat!',
@@ -61,6 +88,19 @@ export function evaluateObservation(
 
   // 3. Check NEED OBSERVATION (Warna belum banyak berubah padahal sudah fase lanjutan, atau gas tidak ada di bulan pertama)
   if (dayNumber <= 30 && gas === 'tidak_ada' && aroma === 'manis') {
+    if (lang === 'en') {
+      return {
+        status: 'observe',
+        headline: 'Good Bacteria Are Still Waking Up',
+        feedback:
+          'There is no gas hiss yet and it still smells sweet like sugar. This is normal in the early stage! Gently swirl the jar while keeping the lid tightly closed.',
+        mascotMood: 'thoughtful',
+        requiresAdult: false,
+        actionAdvice:
+          'Check that the jar lid is airtight and stored in a room that is not too cold.',
+        points: 25
+      };
+    }
     return {
       status: 'observe',
       headline: 'Bakteri Baik Masih Bangun Tidur',
@@ -75,6 +115,28 @@ export function evaluateObservation(
   }
 
   // 4. NORMAL HEALTHY FERMENTATION
+  if (lang === 'en') {
+    let normalFeedbackEn = 'Awesome! Your jar fermentation is progressing very well.';
+    if (surface === 'putih_tipis') {
+      normalFeedbackEn =
+        'Amazing! A thin white layer (good Pitera yeast) has appeared. This is a sign that the Eco-Enzyme microorganisms are happily at work!';
+    } else if (aroma === 'asam_segar') {
+      normalFeedbackEn =
+        'Wonderful, a fresh sour aroma is starting to bloom! Yeast and good bacteria are successfully turning fruit scraps into beneficial enzymes.';
+    }
+
+    return {
+      status: 'normal',
+      headline: 'Fermentation Is Going Perfectly!',
+      feedback: normalFeedbackEn,
+      mascotMood: 'happy',
+      requiresAdult: false,
+      actionAdvice:
+        'Continue with your next scheduled observation and keep the container in a clean, shaded corner.',
+      points: 50
+    };
+  }
+
   let normalFeedback = 'Hebat! Fermentasi toplesmu berkembang sangat baik.';
   if (surface === 'putih_tipis') {
     normalFeedback =
@@ -162,7 +224,7 @@ export const SAMPLE_SCAN_PRESETS: ScannedMaterial[] = [
  * 1 Bagian Gula Merah/Molase : 3 Bagian Bahan Organik : 10 Bagian Air
  * Aturan Safety: Maksimal 2/3 kapasitas wadah agar ruang gas fermentasi aman.
  */
-export function calculateEcoEnzymeRecipe(containerVolumeLiters: number) {
+export function calculateEcoEnzymeRecipe(containerVolumeLiters: number, lang: Language = 'id') {
   // Maksimal 2/3 kapasitas wadah
   const maxSafeVolumeLiters = containerVolumeLiters * (2 / 3);
   
@@ -182,7 +244,13 @@ export function calculateEcoEnzymeRecipe(containerVolumeLiters: number) {
     gulaGram,
     organikGram,
     airMl,
-    rasioText: '1 Bagian Gula : 3 Bagian Organik : 10 Bagian Air',
-    safetyWarning: 'Sisakan 1/3 ruang toples kosong di bagian atas untuk sirkulasi gas pemekaran!'
+    rasioText:
+      lang === 'en'
+        ? '1 Part Sugar : 3 Parts Organic : 10 Parts Water'
+        : '1 Bagian Gula : 3 Bagian Organik : 10 Bagian Air',
+    safetyWarning:
+      lang === 'en'
+        ? 'Leave 1/3 empty space at the top of the jar for fermentation gas circulation!'
+        : 'Sisakan 1/3 ruang toples kosong di bagian atas untuk sirkulasi gas pemekaran!'
   };
 }

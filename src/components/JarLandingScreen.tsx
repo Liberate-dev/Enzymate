@@ -8,11 +8,11 @@ import {
   Archive,
   Droplets,
   Scale,
-  Clock,
   Trash2,
   Layers
 } from 'lucide-react';
 import { JarData } from '../types';
+import { useLanguage, UI_TEXT, localizeJar } from '../i18n';
 
 interface JarLandingScreenProps {
   jars: JarData[];
@@ -27,17 +27,20 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
   onOpenCreateJar,
   onDeleteJar
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].landing;
   const [filterTab, setFilterTab] = useState<'all' | 'active' | 'completed'>('all');
 
-  const activeJars = jars.filter((j) => !j.isCompleted);
-  const completedJars = jars.filter((j) => j.isCompleted);
+  const localizedJars = jars.map((j) => localizeJar(j, lang));
+  const activeJars = localizedJars.filter((j) => !j.isCompleted);
+  const completedJars = localizedJars.filter((j) => j.isCompleted);
 
   const displayedJars =
     filterTab === 'active'
       ? activeJars
       : filterTab === 'completed'
       ? completedJars
-      : jars;
+      : localizedJars;
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 text-stone-800">
@@ -47,19 +50,19 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
 
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-700/80 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-600/60">
-            Laboratorium Mini
+            {t.miniLabBadge}
           </span>
           <span className="text-xs font-bold text-amber-300 bg-emerald-950/70 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-400/30">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>+50 Poin Wadah Baru</span>
+            <span>{t.newJarBonusBadge}</span>
           </span>
         </div>
 
         <h2 className="text-base font-extrabold tracking-tight text-white mb-1">
-          Koleksi Toples Fermentasi
+          {t.heroTitle}
         </h2>
         <p className="text-xs text-emerald-100/90 leading-relaxed mb-3.5 max-w-[280px]">
-          Punya sisa kulit buah segar hari ini? Mulai toples baru dengan takaran formula emas 1:3:10.
+          {t.heroDesc}
         </p>
 
         <button
@@ -67,7 +70,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
           className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
         >
           <Plus className="w-4 h-4 text-emerald-800" />
-          <span>Mulai Buat Toples Baru</span>
+          <span>{t.startNewJarBtn}</span>
         </button>
       </div>
 
@@ -82,7 +85,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                 : 'text-stone-600 hover:bg-stone-100'
             }`}
           >
-            Semua ({jars.length})
+            {t.tabAll(jars.length)}
           </button>
           <button
             onClick={() => setFilterTab('active')}
@@ -92,7 +95,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                 : 'text-stone-600 hover:bg-stone-100'
             }`}
           >
-            Sedang Aktif ({activeJars.length})
+            {t.tabActive(activeJars.length)}
           </button>
           <button
             onClick={() => setFilterTab('completed')}
@@ -102,7 +105,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                 : 'text-stone-600 hover:bg-stone-100'
             }`}
           >
-            Riwayat Panen ({completedJars.length})
+            {t.tabCompleted(completedJars.length)}
           </button>
         </div>
       </div>
@@ -113,10 +116,10 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Toples Dalam Proses Fermentasi</span>
+              <span>{t.activeSectionTitle}</span>
             </h3>
             <span className="text-[10px] text-stone-400 font-medium">
-              Target 90 Hari
+              {t.target90Days}
             </span>
           </div>
 
@@ -141,7 +144,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                     <div className="flex-1 pr-2">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          Aktif
+                          {t.activeBadge}
                         </span>
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
@@ -150,7 +153,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                               : 'bg-amber-50 text-amber-800 border border-amber-200'
                           }`}
                         >
-                          {status === 'normal' ? 'Kondisi Normal' : 'Perlu Diperiksa'}
+                          {status === 'normal' ? t.statusNormal : t.statusCheck}
                         </span>
                       </div>
                       <h4 className="text-sm font-extrabold text-stone-900">
@@ -166,12 +169,12 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`Yakin ingin menghapus toples "${jar.name}"?`)) {
+                          if (confirm(t.confirmDeleteActive(jar.name))) {
                             onDeleteJar(jar.id);
                           }
                         }}
                         className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 opacity-80 transition-all"
-                        title="Hapus toples"
+                        title={t.deleteTooltip}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -183,7 +186,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                     <div className="flex justify-between items-center text-[10px] text-stone-600 font-semibold mb-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3 text-stone-400" />
-                        Hari ke-{currentDay} dari {jar.targetDays || 90}
+                        {t.dayOfTarget(currentDay, jar.targetDays || 90)}
                       </span>
                       <span className="text-emerald-800 font-bold">
                         {progressPercent}%
@@ -209,7 +212,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                         <strong>{jar.organicWeightGrams}g</strong>
                       </span>
                       <span className="text-stone-400">
-                        {jar.observations.length}x log
+                        {t.logsCount(jar.observations.length)}
                       </span>
                     </div>
 
@@ -218,7 +221,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                       onClick={() => onOpenJar(jar.id)}
                       className="flex items-center gap-1 text-xs font-bold text-emerald-800 group-hover:translate-x-0.5 transition-transform"
                     >
-                      <span>Buka Toples</span>
+                      <span>{t.openJarBtn}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -235,10 +238,10 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
               <Archive className="w-3.5 h-3.5 text-amber-700" />
-              <span>Riwayat Toples Selesai & Panen</span>
+              <span>{t.completedSectionTitle}</span>
             </h3>
             <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-              100% Panen Alami
+              {t.naturalHarvestBadge}
             </span>
           </div>
 
@@ -254,7 +257,7 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300 flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3 text-amber-700" />
-                        Panen Selesai (90 Hari)
+                        {t.harvestDoneBadge}
                       </span>
                     </div>
                     <h4 className="text-sm font-extrabold text-stone-900">
@@ -269,12 +272,12 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Yakin ingin menghapus riwayat toples "${jar.name}"?`)) {
+                        if (confirm(t.confirmDeleteHistory(jar.name))) {
                           onDeleteJar(jar.id);
                         }
                       }}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                      title="Hapus riwayat toples"
+                      title={t.deleteHistoryTooltip}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -285,22 +288,22 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                 <div className="p-2.5 rounded-xl bg-white border border-amber-200/80 mb-2.5 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 text-amber-950 font-bold">
                     <Droplets className="w-4 h-4 text-amber-600" />
-                    <span>Hasil: {jar.harvestYieldMl || 1800} ml Cairan Enzim</span>
+                    <span>{t.harvestYieldLabel(jar.harvestYieldMl || 1800)}</span>
                   </div>
                   <span className="text-[10px] text-stone-500 font-medium">
-                    Panen: {jar.harvestDate || 'Selesai'}
+                    {t.harvestDateLabel(jar.harvestDate || t.completedFallback)}
                   </span>
                 </div>
 
                 {/* Footer Card */}
                 <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1">
-                  <span>Wadah {jar.containerCapacityLiters}L • {jar.organicWeightGrams}g Organik</span>
+                  <span>{t.containerSummary(jar.containerCapacityLiters, jar.organicWeightGrams)}</span>
                   <button
                     type="button"
                     onClick={() => onOpenJar(jar.id)}
                     className="flex items-center gap-1 font-bold text-amber-900 group-hover:translate-x-0.5 transition-transform"
                   >
-                    <span>Lihat Rincian Panen</span>
+                    <span>{t.viewHarvestDetails}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -314,9 +317,9 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
       {displayedJars.length === 0 && (
         <div className="p-8 text-center bg-stone-50 rounded-2xl border border-stone-200">
           <Archive className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-          <h4 className="text-xs font-bold text-stone-700">Tidak ada toples di tab ini</h4>
+          <h4 className="text-xs font-bold text-stone-700">{t.emptyTabTitle}</h4>
           <p className="text-[11px] text-stone-500 mt-1">
-            Klik tombol &quot;Mulai Buat Toples Baru&quot; untuk menambahkan wadah fermentasi.
+            {t.emptyTabDesc}
           </p>
         </div>
       )}

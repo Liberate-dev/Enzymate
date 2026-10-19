@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { MascotBot } from './MascotBot';
 import { EvaluationResult } from '../ruleEngine';
+import { useLanguage, UI_TEXT } from '../i18n';
 
 interface FeedbackModalProps {
   result: EvaluationResult;
@@ -9,6 +10,9 @@ interface FeedbackModalProps {
 }
 
 export const FeedbackModal: React.FC<FeedbackModalProps> = ({ result, onClose }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].feedbackModal;
+
   useEffect(() => {
     if (result.status === 'normal') {
       confetti({
@@ -21,19 +25,19 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ result, onClose })
 
   const statusConfig = {
     normal: {
-      badgeText: 'Kondisi Normal & Sehat',
+      badgeText: t.statusBadges.normal,
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-300'
     },
     observe: {
-      badgeText: 'Perlu Pengamatan Lanjutan',
+      badgeText: t.statusBadges.observe,
       badgeClass: 'bg-stone-100 text-stone-800 border-stone-300'
     },
     attention: {
-      badgeText: 'Perlu Perhatian Khusus',
+      badgeText: t.statusBadges.attention,
       badgeClass: 'bg-amber-50 text-amber-800 border-amber-300'
     },
     failed: {
-      badgeText: 'Kontaminasi Terdeteksi',
+      badgeText: t.statusBadges.failed,
       badgeClass: 'bg-rose-50 text-rose-800 border-rose-300'
     }
   }[result.status];
@@ -63,7 +67,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ result, onClose })
         {result.requiresAdult && (
           <div className="w-full bg-rose-50 border border-rose-300 p-3 rounded-xl text-left mb-3">
             <div className="text-xs font-bold text-rose-900 mb-0.5">
-              Instruksi Keselamatan Pendamping:
+              {t.adultSafetyTitle}
             </div>
             <p className="text-[11px] text-rose-800 leading-snug">
               {result.actionAdvice}
@@ -74,14 +78,14 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ result, onClose })
         {/* Rekomendasi Tindakan jika bukan gagal */}
         {!result.requiresAdult && (
           <div className="w-full bg-stone-50 border border-stone-200 p-2.5 rounded-xl text-left mb-3 text-[11px] text-stone-700">
-            <span className="font-bold">Saran: </span>
+            <span className="font-bold">{t.advicePrefix}</span>
             {result.actionAdvice}
           </div>
         )}
 
         {/* Reward Poin */}
         <div className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 mb-4">
-          +{result.points} Poin Kedisiplinan Ditambahkan
+          {t.pointsAdded(result.points)}
         </div>
 
         {/* Tombol Selesai */}
@@ -89,7 +93,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ result, onClose })
           onClick={onClose}
           className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center"
         >
-          Kembali ke Dashboard
+          {t.backToDashboard}
         </button>
       </div>
     </div>

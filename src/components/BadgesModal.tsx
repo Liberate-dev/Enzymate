@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Badge } from '../types';
+import { useLanguage, UI_TEXT, localizeBadges } from '../i18n';
 
 interface BadgesModalProps {
   badges: Badge[];
@@ -17,11 +18,15 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
   organicSavedGrams,
   onClose
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].badgesModal;
+  const localizedBadges = localizeBadges(badges, lang);
+
   const schoolLeaderboard = [
-    { rank: 1, class: 'Kelas 5B - Tim Jeruk Manis', weightKg: 14.2, points: 640 },
-    { rank: 2, class: 'Kelas 5A - Tim Enzy Hebat (Kamu)', weightKg: (organicSavedGrams / 1000).toFixed(1), points: totalPoints, isUser: true },
-    { rank: 3, class: 'Kelas 4C - Pejuang Kompos', weightKg: 8.5, points: 410 },
-    { rank: 4, class: 'Kelas 6A - Detektif Buah', weightKg: 6.8, points: 350 }
+    { rank: 1, class: t.leaderboardClasses[0], weightKg: 14.2, points: 640 },
+    { rank: 2, class: t.leaderboardClasses[1], weightKg: (organicSavedGrams / 1000).toFixed(1), points: totalPoints, isUser: true },
+    { rank: 3, class: t.leaderboardClasses[2], weightKg: 8.5, points: 410 },
+    { rank: 4, class: t.leaderboardClasses[3], weightKg: 6.8, points: 350 }
   ];
 
   return (
@@ -30,8 +35,8 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
         {/* Header Bersih */}
         <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
           <div>
-            <h3 className="font-extrabold text-sm text-stone-900">Prestasi & Klasemen Sekolah</h3>
-            <p className="text-[11px] text-stone-500">Misi SDG Lingkungan & Disiplin</p>
+            <h3 className="font-extrabold text-sm text-stone-900">{t.title}</h3>
+            <p className="text-[11px] text-stone-500">{t.subtitle}</p>
           </div>
           <button
             onClick={onClose}
@@ -45,27 +50,27 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-center">
             <div className="text-sm font-extrabold text-stone-900">{organicSavedGrams} g</div>
-            <div className="text-[10px] text-stone-500 mt-0.5">Sampah Diolah</div>
+            <div className="text-[10px] text-stone-500 mt-0.5">{t.wasteProcessed}</div>
           </div>
 
           <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-center">
-            <div className="text-sm font-extrabold text-stone-900">{streakDays} Hari</div>
-            <div className="text-[10px] text-stone-500 mt-0.5">Streak Disiplin</div>
+            <div className="text-sm font-extrabold text-stone-900">{t.daysUnit(streakDays)}</div>
+            <div className="text-[10px] text-stone-500 mt-0.5">{t.disciplineStreak}</div>
           </div>
 
           <div className="bg-stone-50 border border-stone-200 rounded-xl p-2.5 text-center">
             <div className="text-sm font-extrabold text-emerald-800">{totalPoints}</div>
-            <div className="text-[10px] text-stone-500 mt-0.5">Total Poin</div>
+            <div className="text-[10px] text-stone-500 mt-0.5">{t.totalPoints}</div>
           </div>
         </div>
 
         {/* Koleksi Lencana */}
         <div className="mb-4">
           <h4 className="text-xs font-bold text-stone-800 mb-2">
-            Lencana Disiplin
+            {t.disciplineBadges}
           </h4>
           <div className="grid grid-cols-2 gap-2">
-            {badges.map((b) => (
+            {localizedBadges.map((b) => (
               <div
                 key={b.id}
                 className={`p-2.5 rounded-xl border text-left transition-all ${
@@ -76,7 +81,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-semibold text-stone-500">
-                    {b.unlocked ? 'Terbuka' : 'Terkunci'}
+                    {b.unlocked ? t.unlocked : t.locked}
                   </span>
                 </div>
                 <div className="text-xs font-bold text-stone-800">{b.name}</div>
@@ -89,7 +94,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
         {/* Klasemen Antar Kelas Sekolah */}
         <div className="mb-4">
           <h4 className="text-xs font-bold text-stone-800 mb-2">
-            Klasemen Toples Sekolah
+            {t.schoolLeaderboardTitle}
           </h4>
           <div className="space-y-1.5">
             {schoolLeaderboard.map((item) => (
@@ -109,7 +114,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
                 </div>
                 <div className="text-right">
                   <div className="text-stone-900 font-bold">{item.points} pts</div>
-                  <div className="text-[9px] text-stone-500">{item.weightKg} kg organik</div>
+                  <div className="text-[9px] text-stone-500">{item.weightKg} {t.organicUnit}</div>
                 </div>
               </div>
             ))}
@@ -120,7 +125,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
           onClick={onClose}
           className="w-full enzymate-btn-primary py-2 px-4 text-xs font-bold text-center mt-auto"
         >
-          Tutup
+          {t.closeBtn}
         </button>
       </div>
     </div>

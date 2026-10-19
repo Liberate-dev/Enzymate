@@ -1,39 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, X, ArrowUp, ArrowDown } from 'lucide-react';
+import { useLanguage, UI_TEXT } from '../i18n';
 
 export interface TourStep {
   targetId: string;
   title: string;
   description: string;
 }
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    targetId: 'tour-jar-card',
-    title: 'Toples Fermentasi Aktif',
-    description: 'Lihat perkembangan toplesmu, umur hari fermentasi, dan pastikan cairan tidak melebihi batas aman 2/3 kapasitas wadah.'
-  },
-  {
-    targetId: 'tour-calculator-card',
-    title: 'Kalkulator Takaran 1 : 3 : 10',
-    description: 'Gunakan kalkulator ini untuk menghitung takaran presisi gula merah, sisa kulit buah, dan air sesuai volume toplesmu.'
-  },
-  {
-    targetId: 'tour-mission-card',
-    title: 'Misi & Observasi Harian',
-    description: 'Setiap hari, buka toples perlahan untuk merilis gas, lalu catat warna, aroma, dan jamur di kartu observasi harian.'
-  },
-  {
-    targetId: 'tour-scanner-button',
-    title: 'AI Camera Scanner',
-    description: 'Pindai sisa kulit buah atau sayur segar menggunakan kamera Edge AI offline untuk memastikan bahan layak sebelum difermentasi.'
-  },
-  {
-    targetId: 'tour-header-stats',
-    title: 'Streak & Poin Kedisiplinan',
-    description: 'Pertahankan streak harian dan raih poin untuk membuka lencana serta membawa kelasmu memimpin klasemen sekolah!'
-  }
-];
 
 interface AppTourGuideProps {
   isOpen: boolean;
@@ -50,6 +23,10 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
   showInitialPrompt,
   onDismissPrompt
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].tour;
+  const TOUR_STEPS = t.steps;
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -63,7 +40,7 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
       const rect = el.getBoundingClientRect();
       setTargetRect(rect);
     }
-  }, [isOpen, currentStepIndex]);
+  }, [isOpen, currentStepIndex, TOUR_STEPS]);
 
   // Handle scroll & sinkronisasi koordinat saat step berganti
   useEffect(() => {
@@ -108,7 +85,7 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
         scrollContainer.removeEventListener('scroll', handleSync);
       }
     };
-  }, [isOpen, currentStepIndex, measureTarget]);
+  }, [isOpen, currentStepIndex, measureTarget, TOUR_STEPS]);
 
   const handleNext = () => {
     if (currentStepIndex < TOUR_STEPS.length - 1) {
@@ -138,10 +115,10 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
             🌱
           </div>
           <h3 className="font-extrabold text-base text-stone-900">
-            Selamat Datang di Enzymo!
+            {t.welcomeTitle}
           </h3>
           <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">
-            Ingin mengikuti panduan tur singkat untuk mengenal fitur-fitur penting pembuatan eco-enzyme?
+            {t.welcomeDesc}
           </p>
 
           <div className="w-full space-y-2 mt-4 pt-3 border-t border-stone-100">
@@ -152,13 +129,13 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
               }}
               className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center shadow-sm"
             >
-              Mulai Tur Panduan
+              {t.startTourBtn}
             </button>
             <button
               onClick={onDismissPrompt}
               className="w-full py-2 px-4 rounded-xl text-stone-500 hover:text-stone-800 font-semibold text-xs transition-colors"
             >
-              Nanti Saja
+              {t.laterBtn}
             </button>
           </div>
         </div>
@@ -259,13 +236,13 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
           {/* Header Dialog */}
           <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-stone-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Langkah {currentStepIndex + 1} dari {TOUR_STEPS.length}
+              {t.stepCounter(currentStepIndex + 1, TOUR_STEPS.length)}
             </span>
             <button
               onClick={handleFinish}
               className="text-stone-400 hover:text-stone-700 text-xs font-semibold flex items-center gap-0.5 transition-colors"
             >
-              <span>Lewati</span>
+              <span>{t.skipBtn}</span>
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -297,14 +274,14 @@ export const AppTourGuide: React.FC<AppTourGuideProps> = ({
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>Sebelumnya</span>
+              <span>{t.prevBtn}</span>
             </button>
 
             <button
               onClick={handleNext}
               className="enzymate-btn-primary py-1.5 px-4 text-xs font-bold flex items-center gap-1 shadow-xs"
             >
-              <span>{isLast ? 'Selesai Tur' : 'Lanjut'}</span>
+              <span>{isLast ? t.finishBtn : t.nextBtn}</span>
               {!isLast && <ChevronRight className="w-4 h-4" />}
             </button>
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { calculateEcoEnzymeRecipe } from '../ruleEngine';
 import { ScannedMaterial } from '../types';
+import { useLanguage, UI_TEXT, localizeText } from '../i18n';
 
 interface CalculatorModalProps {
   initialMaterial?: ScannedMaterial | null;
@@ -12,8 +13,10 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
   initialMaterial,
   onClose
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].calculatorModal;
   const [containerSize, setContainerSize] = useState<number>(3); // default 3 liter
-  const recipe = calculateEcoEnzymeRecipe(containerSize);
+  const recipe = calculateEcoEnzymeRecipe(containerSize, lang);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
@@ -22,10 +25,10 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
           <div>
             <h3 className="font-extrabold text-sm text-stone-900">
-              Kalkulator Formula 1 : 3 : 10
+              {t.title}
             </h3>
             <p className="text-[11px] text-stone-500">
-              Panduan Takaran & Batas Aman Toples
+              {t.subtitle}
             </p>
           </div>
           <button
@@ -40,7 +43,7 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
         {initialMaterial && (
           <div className="mb-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
             <div className="text-[11px] text-emerald-900 leading-snug">
-              Bahan dari Scan AI: <strong>{initialMaterial.name}</strong> (~{initialMaterial.suggestedWeight || 150}g).
+              {t.scannedMaterialNote} <strong>{localizeText(initialMaterial.name, lang)}</strong> (~{initialMaterial.suggestedWeight || 150}g).
             </div>
           </div>
         )}
@@ -48,7 +51,7 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
         {/* Pilihan Ukuran Toples */}
         <div className="mb-3">
           <label className="text-xs font-semibold text-stone-800 block mb-2">
-            Kapasitas Wadah Toples:
+            {t.capacityLabel}
           </label>
           <div className="grid grid-cols-4 gap-1.5 mb-2">
             {[1, 2, 3, 5].map((size) => (
@@ -61,13 +64,13 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
                     : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                 }`}
               >
-                {size} Liter
+                {size} {t.literUnit}
               </button>
             ))}
           </div>
 
           <div className="flex items-center gap-2 mt-2 bg-stone-50 p-2 rounded-lg border border-stone-200">
-            <span className="text-[11px] text-stone-500 font-medium">Kustom:</span>
+            <span className="text-[11px] text-stone-500 font-medium">{t.customLabel}</span>
             <input
               type="range"
               min="1"
@@ -86,10 +89,10 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
         {/* Indikator 2/3 batas aman */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
           <p className="font-bold text-[11px] text-amber-900">
-            Aturan Batas Maksimal 2/3 Wadah
+            {t.safeLimitTitle}
           </p>
           <p className="text-[10px] text-amber-800 leading-snug mt-0.5">
-            Total campuran air & bahan maksimal <strong>{recipe.maxSafeVolumeLiters} Liter</strong>. Sisakan 1/3 bagian kosong di atas untuk ruang sirkulasi gas agar tidak meledak.
+            {t.safeLimitDesc(recipe.maxSafeVolumeLiters)}
           </p>
         </div>
 
@@ -97,24 +100,24 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
         <div className="space-y-1.5 mb-4">
           <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-stone-800">Gula Merah / Molase</div>
-              <div className="text-[10px] text-stone-500">1 Bagian (makanan mikroba)</div>
+              <div className="text-xs font-bold text-stone-800">{t.sugarTitle}</div>
+              <div className="text-[10px] text-stone-500">{t.sugarDesc}</div>
             </div>
             <div className="text-sm font-bold text-stone-900">{recipe.gulaGram} g</div>
           </div>
 
           <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-stone-800">Sisa Kulit Buah / Sayur</div>
-              <div className="text-[10px] text-stone-500">3 Bagian (mentah & bersih)</div>
+              <div className="text-xs font-bold text-stone-800">{t.organicTitle}</div>
+              <div className="text-[10px] text-stone-500">{t.organicDesc}</div>
             </div>
             <div className="text-sm font-bold text-emerald-800">{recipe.organikGram} g</div>
           </div>
 
           <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold text-stone-800">Air Bersih Bebas Kaporit</div>
-              <div className="text-[10px] text-stone-500">10 Bagian (air sumur/galon)</div>
+              <div className="text-xs font-bold text-stone-800">{t.waterTitle}</div>
+              <div className="text-[10px] text-stone-500">{t.waterDesc}</div>
             </div>
             <div className="text-sm font-bold text-stone-900">{recipe.airMl} ml</div>
           </div>
@@ -124,7 +127,7 @@ export const CalculatorModal: React.FC<CalculatorModalProps> = ({
           onClick={onClose}
           className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center mt-auto"
         >
-          Tutup Panduan
+          {t.closeBtn}
         </button>
       </div>
     </div>

@@ -1,32 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { calculateEcoEnzymeRecipe } from '../ruleEngine';
 import { JarData } from '../types';
+import { useLanguage, UI_TEXT, localizeText } from '../i18n';
 
 interface CreateJarModalProps {
   onClose: () => void;
   onCreateJar: (newJar: JarData) => void;
 }
 
-const PRESET_NAMES = [
-  'Toples Sitrus Segar',
-  'Toples Nanas & Apel Ceria',
-  'Toples Tropis Sekolah',
-  'Toples Sayur Organik Hebat'
-];
-
 export const CreateJarModal: React.FC<CreateJarModalProps> = ({
   onClose,
   onCreateJar
 }) => {
-  const [name, setName] = useState<string>('Toples Baru Ceria');
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].createJarModal;
+
+  const [name, setName] = useState<string>(t.defaultName);
   const [containerCapacity, setContainerCapacity] = useState<number>(3);
-  const [ingredients, setIngredients] = useState<string>('Kulit Jeruk, Kulit Pepaya, Kulit Pisang');
+  const [ingredients, setIngredients] = useState<string>(t.defaultIngredients);
   const [startDate, setStartDate] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
   });
 
-  const recipe = calculateEcoEnzymeRecipe(containerCapacity);
+  useEffect(() => {
+    setName((prev) => localizeText(prev, lang));
+    setIngredients((prev) => localizeText(prev, lang));
+  }, [lang]);
+
+  const recipe = calculateEcoEnzymeRecipe(containerCapacity, lang);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,11 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
       organicWeightGrams: recipe.organikGram,
       sugarWeightGrams: recipe.gulaGram,
       waterVolumeMl: recipe.airMl,
-      ingredientsDescription: ingredients.trim() || 'Sisa buah dan sayur segar mentah',
+      ingredientsDescription:
+        ingredients.trim() ||
+        (lang === 'en'
+          ? 'Fresh raw fruit and vegetable scraps'
+          : 'Sisa buah dan sayur segar mentah'),
       observations: []
     };
 
@@ -56,14 +62,14 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Toples Baru
+                {t.newJarBadge}
               </span>
               <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                +50 Poin
+                {t.pointsBadge}
               </span>
             </div>
             <h3 className="font-extrabold text-sm text-stone-900 mt-1">
-              Mulai Toples Fermentasi Baru
+              {t.title}
             </h3>
           </div>
           <button
@@ -78,20 +84,20 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
           {/* 1. Nama Toples */}
           <div>
             <label className="text-xs font-bold text-stone-800 block mb-1">
-              Nama Toples Fermentasi:
+              {t.nameLabel}
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Contoh: Toples Nanas & Jeruk 5A"
+              placeholder={t.namePlaceholder}
               required
               className="w-full text-xs px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 bg-white"
             />
 
             {/* Quick Name Chips */}
             <div className="flex gap-1.5 overflow-x-auto mt-1.5 pb-1 scrollbar-none">
-              {PRESET_NAMES.map((preset) => (
+              {t.presetNames.map((preset) => (
                 <button
                   type="button"
                   key={preset}
@@ -107,7 +113,7 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
           {/* 2. Kapasitas Wadah */}
           <div>
             <label className="text-xs font-bold text-stone-800 block mb-1.5">
-              Kapasitas Wadah Toples (Liter):
+              {t.capacityLabel}
             </label>
             <div className="grid grid-cols-4 gap-1.5">
               {[1, 2, 3, 5].map((size) => (
@@ -121,7 +127,7 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
                       : 'bg-stone-50 hover:bg-stone-100 text-stone-700 border-stone-200'
                   }`}
                 >
-                  {size} Liter
+                  {size} {t.literUnit}
                 </button>
               ))}
             </div>
@@ -132,37 +138,37 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-extrabold text-emerald-950 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-                Takaran Formula Emas 1:3:10
+                {t.goldenFormulaTitle}
               </span>
               <span className="text-[10px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded border border-emerald-300">
-                Aman 2/3 Wadah
+                {t.safeLimitBadge}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-1.5 text-center">
               <div className="bg-white p-2 rounded-lg border border-emerald-200/80">
-                <div className="text-[10px] text-stone-500 font-semibold">1 Bagian Gula</div>
+                <div className="text-[10px] text-stone-500 font-semibold">{t.part1Sugar}</div>
                 <div className="text-xs font-extrabold text-amber-800 mt-0.5">{recipe.gulaGram} g</div>
-                <div className="text-[9px] text-stone-400">Molase / Aren</div>
+                <div className="text-[9px] text-stone-400">{t.molassesPalm}</div>
               </div>
 
               <div className="bg-white p-2 rounded-lg border border-emerald-200/80">
-                <div className="text-[10px] text-stone-500 font-semibold">3 Bagian Organik</div>
+                <div className="text-[10px] text-stone-500 font-semibold">{t.part3Organic}</div>
                 <div className="text-xs font-extrabold text-emerald-800 mt-0.5">{recipe.organikGram} g</div>
-                <div className="text-[9px] text-stone-400">Kulit Buah/Sayur</div>
+                <div className="text-[9px] text-stone-400">{t.fruitVegPeels}</div>
               </div>
 
               <div className="bg-white p-2 rounded-lg border border-emerald-200/80">
-                <div className="text-[10px] text-stone-500 font-semibold">10 Bagian Air</div>
+                <div className="text-[10px] text-stone-500 font-semibold">{t.part10Water}</div>
                 <div className="text-xs font-extrabold text-sky-800 mt-0.5">{recipe.airMl} ml</div>
-                <div className="text-[9px] text-stone-400">Air Bersih/Sumur</div>
+                <div className="text-[9px] text-stone-400">{t.cleanWellWater}</div>
               </div>
             </div>
 
             <div className="flex items-start gap-1.5 text-[10px] text-emerald-900 bg-emerald-100/60 p-2 rounded-lg">
               <AlertCircle className="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
               <span>
-                Total cairan aman: <strong>{recipe.maxSafeVolumeLiters} Liter</strong> (sisakan 1/3 ruang kosong di atas untuk sirkulasi gas).
+                {t.safeTotalNotePrefix} <strong>{recipe.maxSafeVolumeLiters} {t.literUnit}</strong> {t.safeTotalNoteSuffix}
               </span>
             </div>
           </div>
@@ -170,13 +176,13 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
           {/* 4. Deskripsi Bahan Awal */}
           <div>
             <label className="text-xs font-bold text-stone-800 block mb-1">
-              Daftar Bahan Kulit Buah / Sayur Awal:
+              {t.ingredientsLabel}
             </label>
             <input
               type="text"
               value={ingredients}
               onChange={(e) => setIngredients(e.target.value)}
-              placeholder="Contoh: Kulit jeruk, nanas, pisang..."
+              placeholder={t.ingredientsPlaceholder}
               className="w-full text-xs px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 bg-white"
             />
           </div>
@@ -184,7 +190,7 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
           {/* 5. Tanggal Mulai */}
           <div>
             <label className="text-xs font-bold text-stone-800 block mb-1">
-              Tanggal Mulai Fermentasi:
+              {t.startDateLabel}
             </label>
             <input
               type="date"
@@ -201,7 +207,7 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
               className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-sm"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Simpan & Aktifkan Toples Ini</span>
+              <span>{t.submitBtn}</span>
             </button>
           </div>
         </form>

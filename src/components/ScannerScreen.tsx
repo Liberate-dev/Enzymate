@@ -5,8 +5,8 @@ import {
   ChevronRight,
   ArrowRight
 } from 'lucide-react';
-import { SAMPLE_SCAN_PRESETS } from '../ruleEngine';
 import { ScannedMaterial } from '../types';
+import { useLanguage, UI_TEXT, getScanPresets } from '../i18n';
 
 interface ScannerScreenProps {
   onStartFermentation: (material: ScannedMaterial) => void;
@@ -17,11 +17,17 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
   onStartFermentation,
   onOpenCalculator
 }) => {
-  const [selectedMaterial, setSelectedMaterial] = useState<ScannedMaterial>(SAMPLE_SCAN_PRESETS[0]);
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].scanner;
+  const presets = getScanPresets(lang);
+
+  const [selectedId, setSelectedId] = useState<string>(presets[0].id);
+  const selectedMaterial = presets.find((p) => p.id === selectedId) || presets[0];
+
   const [isScanning, setIsScanning] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [confirmedMaterial, setConfirmedMaterial] = useState<ScannedMaterial | null>(null);
+  const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const confirmedMaterial = confirmedId ? presets.find((p) => p.id === confirmedId) || null : null;
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Inisialisasi kamera jika diizinkan browser
@@ -36,12 +42,10 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             setCameraActive(true);
-            setCameraError(null);
           }
         }
       } catch (err) {
         setCameraActive(false);
-        setCameraError('Kamera tidak aktif / mode simulasi offline aktif');
       }
     };
 
@@ -57,19 +61,19 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
   const handleSelectPreset = (material: ScannedMaterial) => {
     setIsScanning(true);
     setTimeout(() => {
-      setSelectedMaterial(material);
+      setSelectedId(material.id);
       setIsScanning(false);
     }, 300);
   };
 
   const handleTriggerConfirmation = (material: ScannedMaterial) => {
-    setConfirmedMaterial(material);
+    setConfirmedId(material.id);
   };
 
   const handleGoToCalculator = () => {
     if (confirmedMaterial) {
       const mat = confirmedMaterial;
-      setConfirmedMaterial(null);
+      setConfirmedId(null);
       onStartFermentation(mat);
       onOpenCalculator(mat);
     }
@@ -78,7 +82,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
   const handleGoToHome = () => {
     if (confirmedMaterial) {
       const mat = confirmedMaterial;
-      setConfirmedMaterial(null);
+      setConfirmedId(null);
       onStartFermentation(mat);
     }
   };
@@ -91,10 +95,10 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
       <div className="p-4 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
         <div>
           <h2 className="text-sm font-bold text-white tracking-wide">
-            AI Camera Scanner
+            {t.title}
           </h2>
           <p className="text-[11px] text-stone-300">
-            Pemrosesan lokal offline
+            {t.subtitle}
           </p>
         </div>
 
@@ -102,7 +106,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           onClick={() => onOpenCalculator()}
           className="bg-stone-800/90 hover:bg-stone-700 text-stone-200 text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-700 transition-colors flex items-center gap-1"
         >
-          <span>Panduan Takaran</span>
+          <span>{t.dosageGuideBtn}</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -124,7 +128,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
               <Camera className="w-8 h-8 text-stone-300" />
             </div>
             <p className="text-xs text-stone-400 max-w-xs leading-relaxed">
-              Kamera siap mendeteksi. Pilih sampel bahan di bawah untuk menguji klasifikasi lokal.
+              {t.cameraReadyDesc}
             </p>
           </div>
         )}
@@ -142,12 +146,12 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
 
           <div className="text-center">
             <span className="text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded bg-black/60 text-emerald-300">
-              Area Deteksi Bahan
+              {t.detectionArea}
             </span>
           </div>
 
           <div className="text-[11px] text-right text-emerald-300 font-mono">
-            {Math.round(selectedMaterial.confidence * 100)}% Presisi
+            {t.precisionLabel(Math.round(selectedMaterial.confidence * 100))}
           </div>
         </div>
 
@@ -177,7 +181,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                   <h3 className="font-bold text-sm tracking-wide">{selectedMaterial.name}</h3>
                 </div>
                 <p className="text-xs text-stone-300 mt-0.5">
-                  Kondisi: <span className="text-white font-medium">{selectedMaterial.condition}</span>
+                  {t.conditionLabel} <span className="text-white font-medium">{selectedMaterial.condition}</span>
                 </p>
               </div>
 
@@ -189,18 +193,18 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                 }`}
               >
                 {selectedMaterial.category === 'fresh_fruit'
-                  ? 'Kulit Buah Segar'
+                  ? t.catFreshFruit
                   : selectedMaterial.category === 'fresh_veg'
-                  ? 'Sayur Segar'
+                  ? t.catFreshVeg
                   : selectedMaterial.category === 'spoiled'
-                  ? 'Tidak Segar'
-                  : 'Bukan Organik'}
+                  ? t.catSpoiled
+                  : t.catOther}
               </span>
             </div>
 
             {/* Saran AI */}
             <div className="text-xs bg-black/50 p-2.5 rounded-lg border border-white/5 mb-3">
-              <span className="font-semibold text-stone-300">Rekomendasi: </span>
+              <span className="font-semibold text-stone-300">{t.recommendationLabel}</span>
               <span className="text-stone-200">{selectedMaterial.aiAdvice}</span>
             </div>
 
@@ -210,11 +214,11 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                 onClick={() => handleTriggerConfirmation(selectedMaterial)}
                 className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center shadow-md"
               >
-                Mulai Fermentasi dengan Bahan Ini
+                {t.startWithMaterialBtn}
               </button>
             ) : (
               <div className="text-xs text-center text-amber-300 py-1.5 font-medium bg-amber-950/40 rounded-lg border border-amber-800/40">
-                Bahan tidak memenuhi syarat untuk difermentasi.
+                {t.invalidMaterialMsg}
               </div>
             )}
           </div>
@@ -226,12 +230,12 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-stone-400 flex items-center gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            Sampel Uji Bahan:
+            {t.sampleTestLabel}
           </span>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {SAMPLE_SCAN_PRESETS.map((item) => {
+          {presets.map((item) => {
             const isSelected = selectedMaterial.id === item.id;
             return (
               <button
@@ -256,10 +260,10 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
           <div className="w-full max-w-sm bg-white text-stone-900 rounded-2xl p-5 shadow-2xl border border-stone-100 flex flex-col text-left">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Bahan Terverifikasi
+                {t.verifiedBadge}
               </span>
               <span className="text-xs font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                +30 Poin
+                {t.pointsBadge}
               </span>
             </div>
 
@@ -267,7 +271,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
               {confirmedMaterial.name}
             </h3>
             <p className="text-xs text-stone-600 mt-0.5">
-              Estimasi berat: <strong>~{confirmedMaterial.suggestedWeight || 150} gram</strong>. Bahan memenuhi syarat untuk diolah ke dalam toples.
+              {t.estimatedWeightMsg(confirmedMaterial.suggestedWeight || 150)}
             </p>
 
             <div className="w-full space-y-2 mt-4 pt-3 border-t border-stone-100">
@@ -275,7 +279,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                 onClick={handleGoToCalculator}
                 className="w-full enzymate-btn-primary py-2.5 px-4 text-xs font-bold text-center flex items-center justify-center gap-1.5 shadow-sm"
               >
-                <span>Hitung Takaran Air & Gula (Panduan 1:3:10)</span>
+                <span>{t.calcWaterSugarBtn}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
 
@@ -283,7 +287,7 @@ export const ScannerScreen: React.FC<ScannerScreenProps> = ({
                 onClick={handleGoToHome}
                 className="w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold text-xs text-center transition-colors"
               >
-                Simpan & Kembali ke Beranda
+                {t.saveAndHomeBtn}
               </button>
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { FermentColor, FermentAroma, FermentSurface, FermentGas } from '../types';
 import { MascotBot } from './MascotBot';
+import { useLanguage, UI_TEXT } from '../i18n';
 
 interface ObservationScreenProps {
   jarName: string;
@@ -28,6 +29,9 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
   onSubmitObservation,
   onResetTodayStatus
 }) => {
+  const { lang } = useLanguage();
+  const t = UI_TEXT[lang].observation;
+
   const [viewMode, setViewMode] = useState<'landing' | 'form'>('landing');
 
   const [selectedColor, setSelectedColor] = useState<FermentColor>('oranye_cokelat');
@@ -38,41 +42,41 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
   const colorOptions: { value: FermentColor; label: string; bgClass: string; desc: string }[] = [
     {
       value: 'bening_kuning',
-      label: 'Bening Kuning',
+      label: t.colors.bening_kuning.label,
       bgClass: 'bg-amber-200 border-amber-300',
-      desc: 'Fase awal fermentasi'
+      desc: t.colors.bening_kuning.desc
     },
     {
       value: 'oranye_cokelat',
-      label: 'Oranye Cokelat',
+      label: t.colors.oranye_cokelat.label,
       bgClass: 'bg-amber-600/30 border-amber-500',
-      desc: 'Warna ideal normal'
+      desc: t.colors.oranye_cokelat.desc
     },
     {
       value: 'cokelat_tua',
-      label: 'Cokelat Gelap',
+      label: t.colors.cokelat_tua.label,
       bgClass: 'bg-stone-700/30 border-stone-600',
-      desc: 'Fase matang molase'
+      desc: t.colors.cokelat_tua.desc
     }
   ];
 
   const aromaOptions: { value: FermentAroma; label: string; desc: string }[] = [
-    { value: 'asam_segar', label: 'Asam Segar', desc: 'Wangi khas eco-enzyme' },
-    { value: 'manis', label: 'Manis Gula', desc: 'Gula belum terurai penuh' },
-    { value: 'alkohol', label: 'Alkohol', desc: 'Aroma tajam fermentasi' },
-    { value: 'busuk', label: 'Bau Busuk', desc: 'Perhatian! Perlu bantuan' }
+    { value: 'asam_segar', label: t.aromas.asam_segar.label, desc: t.aromas.asam_segar.desc },
+    { value: 'manis', label: t.aromas.manis.label, desc: t.aromas.manis.desc },
+    { value: 'alkohol', label: t.aromas.alkohol.label, desc: t.aromas.alkohol.desc },
+    { value: 'busuk', label: t.aromas.busuk.label, desc: t.aromas.busuk.desc }
   ];
 
   const surfaceOptions: { value: FermentSurface; label: string; desc: string; danger?: boolean }[] = [
-    { value: 'bersih', label: 'Permukaan Bersih', desc: 'Cairan bening alami' },
-    { value: 'putih_tipis', label: 'Lapisan Putih Tipis', desc: 'Ragi pitera (Bagus!)' },
-    { value: 'jamur_berbulu', label: 'Jamur Berbulu Warna', desc: 'Jamur hijau/hitam/merah', danger: true }
+    { value: 'bersih', label: t.surfaces.bersih.label, desc: t.surfaces.bersih.desc },
+    { value: 'putih_tipis', label: t.surfaces.putih_tipis.label, desc: t.surfaces.putih_tipis.desc },
+    { value: 'jamur_berbulu', label: t.surfaces.jamur_berbulu.label, desc: t.surfaces.jamur_berbulu.desc, danger: true }
   ];
 
   const gasOptions: { value: FermentGas; label: string; desc: string }[] = [
-    { value: 'banyak', label: 'Banyak Gas', desc: 'Desisan kuat saat dibuka' },
-    { value: 'sedikit', label: 'Gas Sedikit', desc: 'Sedikit bunyi letupan' },
-    { value: 'tidak_ada', label: 'Tidak Ada Gas', desc: 'Tenang tanpa desisan' }
+    { value: 'banyak', label: t.gases.banyak.label, desc: t.gases.banyak.desc },
+    { value: 'sedikit', label: t.gases.sedikit.label, desc: t.gases.sedikit.desc },
+    { value: 'tidak_ada', label: t.gases.tidak_ada.label, desc: t.gases.tidak_ada.desc }
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,20 +97,20 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         <div className="enzymate-card p-5 text-center mb-3.5 bg-white">
           <MascotBot mood="happy" size="md" className="mx-auto mb-2" />
           <span className="text-[10px] font-semibold tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-            Jadwal Observasi Harian
+            {t.dailyScheduleBadge}
           </span>
           <h2 className="text-base font-bold text-stone-900 mt-2">
-            Pusat Pengamatan & Observasi
+            {t.centerTitle}
           </h2>
           <p className="text-xs text-stone-600 mt-1 max-w-xs mx-auto">
-            Pantau kondisi <strong className="text-stone-800">{jarName}</strong> hari ini bersama AI Enzy.
+            {t.centerDescPrefix} <strong className="text-stone-800">{jarName}</strong> {t.centerDescSuffix}
           </p>
         </div>
 
         {/* 3 Langkah Praktis Observasi Sebelum Isi Form (BERSIH, TANPA ICON WARNA-WARNI) */}
         <div className="space-y-2 mb-4">
           <h3 className="text-xs font-bold text-stone-800 px-0.5">
-            3 Langkah Pengamatan Bersama Pendamping:
+            {t.threeStepsTitle}
           </h3>
 
           <div className="p-3 bg-white rounded-xl border border-stone-200 shadow-xs flex items-start gap-2.5">
@@ -114,9 +118,9 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
               1
             </div>
             <div>
-              <h4 className="text-xs font-bold text-stone-800">Dengarkan Desisan Gas</h4>
+              <h4 className="text-xs font-bold text-stone-800">{t.step1Title}</h4>
               <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
-                Buka tutup toples perlahan. Dengarkan apakah ada bunyi letupan desisan gas mikroba aktif.
+                {t.step1Desc}
               </p>
             </div>
           </div>
@@ -126,9 +130,9 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
               2
             </div>
             <div>
-              <h4 className="text-xs font-bold text-stone-800">Cium Aromanya</h4>
+              <h4 className="text-xs font-bold text-stone-800">{t.step2Title}</h4>
               <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
-                Dekatkan hidung tanpa menyentuh cairan. Rasakan apakah beraroma asam segar, manis, atau busuk.
+                {t.step2Desc}
               </p>
             </div>
           </div>
@@ -138,9 +142,9 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
               3
             </div>
             <div>
-              <h4 className="text-xs font-bold text-stone-800">Amati Warna & Jamur</h4>
+              <h4 className="text-xs font-bold text-stone-800">{t.step3Title}</h4>
               <p className="text-[11px] text-stone-500 leading-snug mt-0.5">
-                Cek perubahan warna cairan dan pastikan tidak ada jamur berbulu hitam atau hijau.
+                {t.step3Desc}
               </p>
             </div>
           </div>
@@ -151,25 +155,25 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
           <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center mb-4">
             <div className="flex items-center justify-center gap-1.5 text-emerald-800 font-semibold text-xs mb-1">
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-              <span>Observasi Hari ke-{dayNumber} Sudah Selesai</span>
+              <span>{t.doneTitle(dayNumber)}</span>
             </div>
             <p className="text-[11px] text-emerald-700 leading-relaxed mb-3">
-              Toples telah dicatat hari ini dan tertutup rapat agar bakteri bekerja optimal.
+              {t.doneDesc}
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode('form')}
                 className="flex-1 py-2 px-3 rounded-lg bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 transition-colors"
               >
-                Lihat Catatan Form
+                {t.viewFormBtn}
               </button>
               <button
                 onClick={onResetTodayStatus}
                 className="py-2 px-3 rounded-lg bg-white border border-stone-200 text-stone-600 hover:text-stone-800 font-semibold text-xs flex items-center gap-1 transition-colors"
-                title="Reset mode demo"
+                title={t.resetDemoTooltip}
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Demo</span>
+                <span>{t.resetDemoBtn}</span>
               </button>
             </div>
           </div>
@@ -179,11 +183,11 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
               onClick={() => setViewMode('form')}
               className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center gap-1.5 text-xs shadow-sm"
             >
-              <span>Mulai Isi Kartu Observasi Sekarang</span>
+              <span>{t.startFormBtn}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <p className="text-[10px] text-center text-stone-500 mt-2">
-              Dibatasi 1x per hari demi menjaga kestabilan fermentasi wadah
+              {t.oncePerDayNote}
             </p>
           </div>
         )}
@@ -202,18 +206,18 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
             className="flex items-center gap-1 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-stone-100 px-2.5 py-1 rounded-md transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Panduan</span>
+            <span>{t.backToGuide}</span>
           </button>
           <span className="text-[10px] bg-stone-100 text-stone-700 px-2 py-0.5 rounded font-semibold border border-stone-200">
-            Hari ke-{dayNumber}
+            {t.dayTag(dayNumber)}
           </span>
         </div>
 
         <h2 className="text-base font-bold text-stone-900 mt-2">
-          Formulir Pengamatan Visual
+          {t.formTitle}
         </h2>
         <p className="text-xs text-stone-500">
-          Pilih kondisi yang sesuai dengan hasil pemeriksaan toples hari ini.
+          {t.formSubtitle}
         </p>
       </div>
 
@@ -221,7 +225,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         {/* Variabel 1: WARNA */}
         <div className="enzymate-card p-3.5">
           <label className="text-xs font-bold text-stone-800 block mb-2">
-            1. Warna Cairan Fermentasi
+            {t.var1Label}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {colorOptions.map((c) => {
@@ -249,7 +253,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         {/* Variabel 2: AROMA */}
         <div className="enzymate-card p-3.5">
           <label className="text-xs font-bold text-stone-800 block mb-2">
-            2. Aroma yang Tercium
+            {t.var2Label}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {aromaOptions.map((a) => {
@@ -276,7 +280,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         {/* Variabel 3: PERMUKAAN / JAMUR */}
         <div className="enzymate-card p-3.5">
           <label className="text-xs font-bold text-stone-800 block mb-2">
-            3. Kondisi Permukaan Cairan
+            {t.var3Label}
           </label>
           <div className="space-y-2">
             {surfaceOptions.map((s) => {
@@ -300,7 +304,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
                   </div>
                   {s.danger && (
                     <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                      Perlu Dicek
+                      {t.needsCheckBadge}
                     </span>
                   )}
                 </button>
@@ -312,7 +316,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
         {/* Variabel 4: GAS */}
         <div className="enzymate-card p-3.5">
           <label className="text-xs font-bold text-stone-800 block mb-2">
-            4. Tekanan Gas Saat Tutup Dibuka
+            {t.var4Label}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {gasOptions.map((g) => {
@@ -341,7 +345,7 @@ export const ObservationScreen: React.FC<ObservationScreenProps> = ({
           type="submit"
           className="w-full enzymate-btn-primary py-3 px-4 flex items-center justify-center text-xs shadow-sm mt-1"
         >
-          <span>Kirim Pengamatan ke AI Enzy</span>
+          <span>{t.submitBtn}</span>
         </button>
       </form>
     </div>
