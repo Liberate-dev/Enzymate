@@ -9,10 +9,13 @@ import {
   Droplets,
   Scale,
   Trash2,
-  Layers
+  Layers,
+  Bell,
+  Clock
 } from 'lucide-react';
 import { JarData } from '../types';
 import { useLanguage, UI_TEXT, localizeJar } from '../i18n';
+import { formatTimeRemaining } from '../reminderEngine';
 
 interface JarLandingScreenProps {
   jars: JarData[];
@@ -199,6 +202,39 @@ export const JarLandingScreen: React.FC<JarLandingScreenProps> = ({
                       />
                     </div>
                   </div>
+
+                  {/* Indikator Alarm & Reminder */}
+                  {(() => {
+                    const activeRems = (jar.reminders || []).filter((r) => r.enabled);
+                    if (activeRems.length === 0) return null;
+                    const nextRem = [...activeRems].sort(
+                      (a, b) => new Date(a.nextTriggerAt).getTime() - new Date(b.nextTriggerAt).getTime()
+                    )[0];
+                    if (!nextRem) return null;
+                    const remaining = formatTimeRemaining(nextRem.nextTriggerAt, lang);
+
+                    return (
+                      <div
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] mb-2 border ${
+                          remaining.isDue
+                            ? 'bg-amber-100/80 text-amber-900 border-amber-300 animate-pulse'
+                            : 'bg-stone-50 text-stone-600 border-stone-200'
+                        }`}
+                      >
+                        <Bell
+                          className={`w-3 h-3 ${
+                            remaining.isDue ? 'text-amber-700' : 'text-stone-400'
+                          }`}
+                        />
+                        <span className="font-bold truncate max-w-[140px]">
+                          {nextRem.label}:
+                        </span>
+                        <span className="ml-auto font-black text-amber-900 shrink-0">
+                          {remaining.text}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   {/* Metrik Wadah & Tombol Buka */}
                   <div className="flex items-center justify-between pt-2.5 border-t border-stone-100">

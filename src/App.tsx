@@ -11,7 +11,8 @@ import {
   HelpCircle,
   Layers,
   Plus,
-  Globe
+  Globe,
+  Bell
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -23,6 +24,7 @@ import { AppTourGuide } from './components/AppTourGuide';
 import { JarListModal } from './components/JarListModal';
 import { CreateJarModal } from './components/CreateJarModal';
 import { JarLandingScreen } from './components/JarLandingScreen';
+import { NotificationModal } from './components/NotificationModal';
 import {
   JarData,
   UserProgress,
@@ -30,10 +32,18 @@ import {
   FermentColor,
   FermentAroma,
   FermentSurface,
-  FermentGas
+  FermentGas,
+  JarReminder
 } from './types';
 import { evaluateObservation, EvaluationResult } from './ruleEngine';
 import { useLanguage, UI_TEXT, localizeJar, localizeText } from './i18n';
+import {
+  checkDueReminders,
+  triggerBrowserNotification,
+  calculateNextTrigger,
+  createDefaultReminder,
+  getProcedureForJar
+} from './reminderEngine';
 
 const INITIAL_JARS: JarData[] = [
   {
@@ -46,6 +56,27 @@ const INITIAL_JARS: JarData[] = [
     sugarWeightGrams: 150,
     waterVolumeMl: 1500,
     ingredientsDescription: 'Kulit Jeruk Manis, Kulit Pepaya Muda, Batang Sawi',
+    reminders: [
+      {
+        id: 'rem-init-1',
+        procedureType: 'degas',
+        label: 'Pelepasan Gas (Degassing / Buka Tutup Sedikit)',
+        value: 2,
+        unit: 'days',
+        enabled: true,
+        createdAt: '2026-09-24T08:00:00.000Z',
+        nextTriggerAt: new Date(Date.now() + 1000 * 60 * 25).toISOString(), // 25 menit lagi
+        isRecurring: true,
+        instructions: [
+          'Posisikan toples di atas meja datar, jauhkan wajah dari arah mulut tutup.',
+          'Putar tutup toples perlahan 1/4 - 1/2 putaran hingga terdengar desisan gas ("ssshh").',
+          'Tahan sebentar hingga desisan gas berhenti sempurna.',
+          'JANGAN buka tutup seluruhnya agar oksigen luar tidak masuk dan merusak bakteri anaerob.',
+          'Kencangkan kembali tutup toples hingga benar-benar kedap udara.'
+        ],
+        safetyWarning: 'Waspada desisan gas bertekanan! Jangan mengguncang toples sebelum membuka tutup.'
+      }
+    ],
     observations: [
       {
         id: 'obs-1',
@@ -85,6 +116,26 @@ const INITIAL_JARS: JarData[] = [
     sugarWeightGrams: 100,
     waterVolumeMl: 1000,
     ingredientsDescription: 'Sisa Batang Sawi Hijau, Batang Kangkung, Kulit Mentimun',
+    reminders: [
+      {
+        id: 'rem-init-2',
+        procedureType: 'check_mold',
+        label: 'Periksa Lapisan Jamur Pitera (Ragi Baik)',
+        value: 7,
+        unit: 'days',
+        enabled: true,
+        createdAt: '2026-10-06T08:00:00.000Z',
+        nextTriggerAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // Besok
+        isRecurring: true,
+        instructions: [
+          'Nyalakan lampu senter HP dan sorot permukaan cairan DARI LUAR toples (JANGAN buka tutup).',
+          'Periksa apakah ada lapisan putih tipis lembut (itu adalah jamur Pitera / ragi baik, tanda fermentasi sehat).',
+          'Pastikan TIDAK ADA bintik berbulu hitam, hijau, atau lendir berbau busuk bangkai.',
+          'Jika permukaan bersih atau putih tipis, toples dalam kondisi prima dan biarkan tenang.'
+        ],
+        safetyWarning: 'Hindari membuka toples hanya untuk melihat-lihat, agar udara luar tidak mengkontaminasi.'
+      }
+    ],
     observations: [
       {
         id: 'obs-2-1',
@@ -183,7 +234,15 @@ export const App: React.FC = () => {
     if (savedJars) {
       try {
         const parsed = JSON.parse(savedJars);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((j) => ({
+            ...j,
+            reminders:
+              j.reminders && j.reminders.length > 0
+                ? j.reminders
+                : [createDefaultReminder('Rilis Gas & Observasi', 2, 'days')]
+          }));
+        }
       } catch (e) {}
     }
     const savedSingle = localStorage.getItem('enzymate_jar');
@@ -203,6 +262,8 @@ export const App: React.FC = () => {
 
   const [showJarList, setShowJarList] = useState<boolean>(false);
   const [showCreateJar, setShowCreateJar] = useState<boolean>(false);
+  const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [lastNotifiedMap, setLastNotifiedMap] = useState<Record<string, number>>({});
   const [homeViewMode, setHomeViewMode] = useState<'list' | 'detail'>('list');
 
   const rawActiveJar = jars.find((j) => j.id === activeJarId) || jars[0] || INITIAL_JAR;
@@ -276,6 +337,47 @@ export const App: React.FC = () => {
       setShowTourPrompt(true);
     }
   }, []);
+
+  const dueItems = checkDueReminders(jars);
+  const dueCount = dueItems.length;
+
+  // Background reminder & alarm checker berkala setiap 15 detik
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const due = checkDueReminders(jars);
+      if (due.length > 0) {
+        const now = Date.now();
+        due.forEach(({ jar: dueJar, reminder }) => {
+          const lastSent = lastNotifiedMap[reminder.id] || 0;
+          if (now - lastSent > 3 * 60 * 1000) {
+            const procedure = getProcedureForJar(dueJar, lang);
+            const firstInstruction =
+              reminder.instructions && reminder.instructions.length > 0
+                ? reminder.instructions[0]
+                : procedure.instructions[0];
+
+            triggerBrowserNotification(
+              lang === 'en'
+                ? `🔔 ${dueJar.name}: ${procedure.title}`
+                : `🔔 ${dueJar.name}: ${procedure.title}`,
+              {
+                body: firstInstruction
+              }
+            );
+            setLastNotifiedMap((prev) => ({ ...prev, [reminder.id]: now }));
+          }
+        });
+      }
+    }, 15000);
+
+    return () => clearInterval(timer);
+  }, [jars, lastNotifiedMap, lang]);
+
+  const handleUpdateJarReminders = (jarId: string, updatedReminders: JarReminder[]) => {
+    setJars((prev) =>
+      prev.map((j) => (j.id === jarId ? { ...j, reminders: updatedReminders } : j))
+    );
+  };
 
   const handleSelectJar = (id: string) => {
     setActiveJarId(id);
@@ -387,11 +489,23 @@ export const App: React.FC = () => {
     };
 
     setJars((prev) =>
-      prev.map((j) =>
-        j.id === rawActiveJar.id
-          ? { ...j, observations: [newRecord, ...j.observations] }
-          : j
-      )
+      prev.map((j) => {
+        if (j.id !== rawActiveJar.id) return j;
+        const updatedReminders = (j.reminders || []).map((r) => {
+          if (!r.enabled || !r.isRecurring) return r;
+          const nextDate = calculateNextTrigger(r.value, r.unit);
+          return {
+            ...r,
+            lastTriggeredAt: new Date().toISOString(),
+            nextTriggerAt: nextDate.toISOString()
+          };
+        });
+        return {
+          ...j,
+          observations: [newRecord, ...j.observations],
+          reminders: updatedReminders
+        };
+      })
     );
 
     setUser((prev) => ({
@@ -492,6 +606,21 @@ export const App: React.FC = () => {
               title={t.header.tourTooltip}
             >
               <HelpCircle className="w-4 h-4" />
+            </button>
+
+            {/* Tombol Lonceng Pengingat & Alarm */}
+            <button
+              type="button"
+              onClick={() => setShowNotifications(true)}
+              className="relative p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-700/60 transition-colors"
+              title={lang === 'en' ? 'Reminders & Alarms' : 'Pengingat & Alarm Toples'}
+            >
+              <Bell className="w-4 h-4" />
+              {dueCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] bg-rose-500 text-white rounded-full text-[9px] font-black flex items-center justify-center animate-bounce shadow-xs px-0.5">
+                  {dueCount}
+                </span>
+              )}
             </button>
 
             {/* Streak & Poin (Target Spotlight Header) */}
@@ -867,6 +996,19 @@ export const App: React.FC = () => {
           <CreateJarModal
             onClose={() => setShowCreateJar(false)}
             onCreateJar={handleCreateJar}
+          />
+        )}
+
+        {/* MODAL PUSAT PENGINGAT & ALARM TOPLES */}
+        {showNotifications && (
+          <NotificationModal
+            jars={jars}
+            onClose={() => setShowNotifications(false)}
+            onSelectJarForObservation={(targetJarId) => {
+              handleOpenJarDetail(targetJarId);
+              setActiveTab('observation');
+            }}
+            onUpdateJarReminders={handleUpdateJarReminders}
           />
         )}
       </div>

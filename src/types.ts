@@ -19,6 +19,56 @@ export type FermentGas = 'banyak' | 'sedikit' | 'tidak_ada';
 
 export type FermentStatus = 'normal' | 'observe' | 'attention' | 'failed';
 
+export type ReminderUnit = 'minutes' | 'hours' | 'days';
+
+export type ProcedureType =
+  | 'degas'
+  | 'submerge_stir'
+  | 'check_mold'
+  | 'inspect_seal'
+  | 'harvest_prep'
+  | 'custom';
+
+export interface ProcedureGuide {
+  type: ProcedureType;
+  title: string;
+  badge: string;
+  description: string;
+  instructions: string[];
+  safetyWarning?: string;
+  recommendedInterval: { value: number; unit: ReminderUnit };
+}
+
+export interface JarReminder {
+  id: string;
+  label: string;
+  value: number;
+  unit: ReminderUnit;
+  enabled: boolean;
+  createdAt: string;
+  nextTriggerAt: string;
+  lastTriggeredAt?: string;
+  isRecurring: boolean;
+  procedureType?: ProcedureType;
+  instructions?: string[];
+  safetyWarning?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  jarId: string;
+  jarName: string;
+  reminderId?: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  type: 'alarm' | 'reminder' | 'overdue' | 'safety';
+  isRead: boolean;
+  procedureType?: ProcedureType;
+  instructions?: string[];
+  safetyWarning?: string;
+}
+
 export interface ObservationRecord {
   id: string;
   dayNumber: number;
@@ -47,6 +97,7 @@ export interface JarData {
   isCompleted?: boolean;
   harvestDate?: string;
   harvestYieldMl?: number;
+  reminders?: JarReminder[];
 }
 
 export interface UserProgress {

@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  X,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  Bell,
+  Clock,
+  Info
+} from 'lucide-react';
 import { calculateEcoEnzymeRecipe } from '../ruleEngine';
-import { JarData } from '../types';
+import { JarData, JarReminder, ReminderUnit } from '../types';
 import { useLanguage, UI_TEXT, localizeText } from '../i18n';
+import { createDefaultReminder } from '../reminderEngine';
 
 interface CreateJarModalProps {
   onClose: () => void;
@@ -23,6 +32,11 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
     return new Date().toISOString().split('T')[0];
   });
 
+  // State Pengingat Tunggal Terpadu (Bersih, Rapi, Bebas Overwhelm)
+  const [reminderEnabled, setReminderEnabled] = useState<boolean>(true);
+  const [reminderValue, setReminderValue] = useState<number>(2);
+  const [reminderUnit, setReminderUnit] = useState<ReminderUnit>('days');
+
   useEffect(() => {
     setName((prev) => localizeText(prev, lang));
     setIngredients((prev) => localizeText(prev, lang));
@@ -33,6 +47,18 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    const initialReminders: JarReminder[] = reminderEnabled
+      ? [
+          createDefaultReminder(
+            lang === 'en' ? 'Jar Care & Degassing' : 'Perawatan & Rilis Gas Toples',
+            reminderValue,
+            reminderUnit,
+            'degas',
+            lang
+          )
+        ]
+      : [];
 
     const newJar: JarData = {
       id: `jar-${Date.now()}`,
@@ -48,7 +74,8 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
         (lang === 'en'
           ? 'Fresh raw fruit and vegetable scraps'
           : 'Sisa buah dan sayur segar mentah'),
-      observations: []
+      observations: [],
+      reminders: initialReminders
     };
 
     onCreateJar(newJar);
@@ -198,6 +225,154 @@ export const CreateJarModal: React.FC<CreateJarModalProps> = ({
               onChange={(e) => setStartDate(e.target.value)}
               className="w-full text-xs px-3 py-2 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 bg-white"
             />
+          </div>
+
+          {/* 6. JADWAL PENGINGAT PERAWATAN TOPLES (ELEGAN, MINIMALIS, BEBAS OVERWHELM) */}
+          <div className="p-3 bg-amber-50/60 border border-amber-200/80 rounded-xl space-y-2.5">
+            {/* Header Pengingat + Toggle Bersih */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Bell className="w-4 h-4 text-amber-700" />
+                <div>
+                  <span className="text-xs font-extrabold text-stone-900 block leading-tight">
+                    {lang === 'en' ? 'Jar Care Reminder' : 'Jadwal Pengingat Toples'}
+                  </span>
+                  <span className="text-[10px] text-stone-500 font-medium">
+                    {lang === 'en' ? 'Automatic procedure alerts' : 'Notifikasi otomatis saat waktunya tiba'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Minimalist Switch Toggle */}
+              <button
+                type="button"
+                onClick={() => setReminderEnabled(!reminderEnabled)}
+                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer ${
+                  reminderEnabled ? 'bg-amber-600 justify-end' : 'bg-stone-300 justify-start'
+                }`}
+                title={reminderEnabled ? 'Aktif' : 'Non-aktif'}
+              >
+                <div className="bg-white w-4 h-4 rounded-full shadow-xs transition-transform duration-200" />
+              </button>
+            </div>
+
+            {/* Input Interval & Satuan (Hanya tampil jika aktif) */}
+            {reminderEnabled && (
+              <div className="space-y-2 pt-1 border-t border-amber-200/50 animate-in fade-in duration-150">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 shadow-2xs">
+                    <Clock className="w-3.5 h-3.5 text-stone-400" />
+                    <input
+                      type="number"
+                      min="1"
+                      max="999"
+                      value={reminderValue}
+                      onChange={(e) =>
+                        setReminderValue(Math.max(1, parseInt(e.target.value) || 1))
+                      }
+                      className="w-10 text-xs font-extrabold text-stone-900 bg-transparent text-center focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Segmented Pill Selector: Hari / Jam / Menit */}
+                  <div className="flex bg-stone-100 p-0.5 rounded-lg border border-stone-200 flex-1">
+                    {(['days', 'hours', 'minutes'] as ReminderUnit[]).map((u) => {
+                      const label =
+                        u === 'days'
+                          ? (lang === 'en' ? 'Days' : 'Hari')
+                          : u === 'hours'
+                          ? (lang === 'en' ? 'Hours' : 'Jam')
+                          : (lang === 'en' ? 'Mins' : 'Menit');
+                      const isSelected = reminderUnit === u;
+                      return (
+                        <button
+                          type="button"
+                          key={u}
+                          onClick={() => setReminderUnit(u)}
+                          className={`flex-1 text-[11px] font-bold py-1 rounded-md transition-all ${
+                            isSelected
+                              ? 'bg-amber-600 text-white shadow-2xs'
+                              : 'text-stone-600 hover:text-stone-900'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Quick Chips Presets */}
+                <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderValue(2);
+                      setReminderUnit('days');
+                    }}
+                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                      reminderValue === 2 && reminderUnit === 'days'
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
+                        : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}
+                  >
+                    {lang === 'en' ? '📅 2 Days (Recommended)' : '📅 2 Hari (Disarankan)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderValue(1);
+                      setReminderUnit('days');
+                    }}
+                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                      reminderValue === 1 && reminderUnit === 'days'
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
+                        : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-200'
+                    }`}
+                  >
+                    {lang === 'en' ? '1 Day' : '1 Hari'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderValue(3);
+                      setReminderUnit('days');
+                    }}
+                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                      reminderValue === 3 && reminderUnit === 'days'
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs'
+                        : 'bg-white hover:bg-stone-50 text-stone-700 border-stone-200'
+                    }`}
+                  >
+                    {lang === 'en' ? '3 Days' : '3 Hari'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReminderValue(5);
+                      setReminderUnit('minutes');
+                    }}
+                    className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
+                      reminderValue === 5 && reminderUnit === 'minutes'
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                        : 'bg-white hover:bg-amber-50 text-amber-900 border-amber-200'
+                    }`}
+                  >
+                    {lang === 'en' ? '⚡ 5 Mins (Demo)' : '⚡ 5 Menit (Demo)'}
+                  </button>
+                </div>
+
+                {/* Educational Reassurance Note */}
+                <div className="flex items-start gap-1.5 p-2 bg-white/80 rounded-lg border border-amber-200/60 text-[10px] text-stone-600">
+                  <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                  <span className="leading-snug">
+                    {lang === 'en'
+                      ? 'Enzymo automatically tells you the exact procedure (degassing, aroma check, or stirring) matching your jar’s age.'
+                      : 'Enzymo akan otomatis mengingatkan prosedur yang tepat (rilis gas, cek aroma, atau aduk) sesuai usia toplesmu.'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
