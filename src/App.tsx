@@ -12,7 +12,8 @@ import {
   Layers,
   Plus,
   Globe,
-  Bell
+  Bell,
+  X
 } from 'lucide-react';
 import { JarIllustration } from './components/JarIllustration';
 import { ScannerScreen } from './components/ScannerScreen';
@@ -265,6 +266,30 @@ export const App: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [lastNotifiedMap, setLastNotifiedMap] = useState<Record<string, number>>({});
   const [homeViewMode, setHomeViewMode] = useState<'list' | 'detail'>('list');
+  const [headsUpBanner, setHeadsUpBanner] = useState<{
+    title: string;
+    body: string;
+  } | null>(null);
+
+  // Listener notifikasi heads-up mengambang di layar HP
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvt = e as CustomEvent<{ title: string; body: string }>;
+      if (customEvt.detail) {
+        setHeadsUpBanner(customEvt.detail);
+      }
+    };
+    window.addEventListener('enzymo-heads-up-notification', handler);
+    return () => window.removeEventListener('enzymo-heads-up-notification', handler);
+  }, []);
+
+  // Otomatis sembunyikan banner setelah 6 detik
+  useEffect(() => {
+    if (headsUpBanner) {
+      const timer = setTimeout(() => setHeadsUpBanner(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [headsUpBanner]);
 
   const rawActiveJar = jars.find((j) => j.id === activeJarId) || jars[0] || INITIAL_JAR;
   const activeJar = localizeJar(rawActiveJar, lang);
@@ -546,7 +571,50 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-200 flex items-center justify-center py-0 sm:py-6 selection:bg-emerald-200">
-      <div className="mobile-shell">
+      <div className="mobile-shell relative">
+        {/* FLOATING HEADS-UP NOTIFICATION BANNER (TAMPILAN NOTIFIKASI PUSH DI LAYAR HP) */}
+        {headsUpBanner && (
+          <div className="absolute top-2 left-2 right-2 z-50 animate-in slide-in-from-top-3 duration-200">
+            <div
+              onClick={() => {
+                setShowNotifications(true);
+                setHeadsUpBanner(null);
+              }}
+              className="bg-emerald-950/95 text-white p-3 rounded-2xl shadow-2xl border border-emerald-500/40 backdrop-blur-md flex items-start gap-2.5 cursor-pointer hover:bg-emerald-900 transition-all active:scale-98"
+            >
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 animate-bounce">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div className="flex-1 min-w-0 pr-1 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">
+                    {lang === 'en' ? 'Enzymo Alert' : 'Pemberitahuan Enzymo'}
+                  </span>
+                  <span className="text-[9px] text-emerald-300/80">
+                    {lang === 'en' ? 'Just now' : 'Baru saja'}
+                  </span>
+                </div>
+                <h4 className="text-xs font-black text-white truncate mt-0.5">
+                  {headsUpBanner.title}
+                </h4>
+                <p className="text-[11px] text-emerald-100/90 leading-snug line-clamp-2 mt-0.5">
+                  {headsUpBanner.body}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHeadsUpBanner(null);
+                }}
+                className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-emerald-200 hover:text-white flex items-center justify-center transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* TOP STATUS BAR */}
         <header className="bg-emerald-800 text-white px-4 pt-3.5 pb-3 flex items-center justify-between border-b border-emerald-900/40 sticky top-0 z-30">
           <div>

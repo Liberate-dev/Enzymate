@@ -381,6 +381,10 @@ export function playNotificationChime(): void {
     if (!AudioContextClass) return;
 
     const ctx = new AudioContextClass();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
     const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6 (chord C Major)
     
     notes.forEach((freq, index) => {
@@ -406,27 +410,78 @@ export function playNotificationChime(): void {
 }
 
 /**
- * Menembakkan Browser Web Notification dengan konten spesifik prosedur
+ * Menembakkan Browser Web Notification & Service Worker dengan konten spesifik prosedur
+ * Kompatibel penuh dengan Android Chrome, iOS Safari PWA, dan Desktop.
  */
 export function triggerBrowserNotification(
   title: string,
   options?: NotificationOptions
 ): boolean {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
+  if (typeof window === 'undefined') {
     return false;
   }
 
-  if (Notification.permission === 'granted') {
+  // 1. Mainkan nada lonceng manis
+  playNotificationChime();
+
+  // 2. Getar haptic HP Android
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate([200, 100, 200]);
+    } catch (e) {}
+  }
+
+  // 3. Dispatch internal custom event untuk Heads-Up Banner Mengambang di Layar HP
+  try {
+    window.dispatchEvent(
+      new CustomEvent('enzymo-heads-up-notification', {
+        detail: {
+          title,
+          body: (options?.body as string) || '',
+          icon: '/favicon.ico'
+        }
+      })
+    );
+  } catch (e) {}
+
+  // 4. Kirim ke Notification Bar Sistem (Android Notification Tray / Windows Action Center)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    // Prioritas 1: Service Worker Registration (WAJIB untuk Android Chrome Mobile)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.showNotification(title, {
+            icon: '/favicon.ico',
+            badge: '/favicon.ico',
+            ...options,
+            ...({ vibrate: [200, 100, 200] } as Record<string, unknown>)
+          } as NotificationOptions);
+        })
+        .catch(() => {
+          // Fallback jalur constructor jika Service Worker belum ready
+          try {
+            new Notification(title, {
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              ...options
+            });
+          } catch (err) {
+            console.warn('Fallback constructor failed on mobile:', err);
+          }
+        });
+      return true;
+    }
+
+    // Prioritas 2: Constructor langsung untuk Desktop Browser
     try {
       new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
         ...options
       });
-      playNotificationChime();
       return true;
     } catch (e) {
-      console.warn('Gagal memicu browser notification:', e);
+      console.warn('Browser blocks direct Notification constructor on mobile:', e);
       return false;
     }
   }

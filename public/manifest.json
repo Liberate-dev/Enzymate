@@ -1,0 +1,16 @@
+{
+  "name": "Enzymo - Sahabat Eco-Enzyme",
+  "short_name": "Enzymo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#064e3b",
+  "theme_color": "#047857",
+  "description": "Aplikasi edukasi fermentasi eco-enzyme untuk pemula dengan sistem pengingat otomatis",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
